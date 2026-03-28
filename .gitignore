@@ -1,0 +1,41 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+dist/
+*.js.map
+
+# Flutter/Dart
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/build/
+app/.packages
+*.g.dart
+*.freezed.dart
+
+# iOS
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/flutter_export_environment.sh
+
+# Secrets
+*.pem
+*.p8
+*.key
+secrets/
+AuthKey_*.p8
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
