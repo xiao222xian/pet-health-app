@@ -14,8 +14,9 @@ const supabase = createClient(
 
 const ConsultSchema = z.object({
   pet_id: z.string().uuid(),
-  symptoms: z.string().min(5).max(1000),
+  symptoms: z.string().min(3).max(1000),
   photo_urls: z.array(z.string().url()).max(3).optional(),
+  photo_data: z.array(z.string()).max(3).optional(), // base64-encoded images
 });
 
 consultRouter.post('/', verifyAuth, async (req: AuthRequest, res) => {
@@ -25,7 +26,7 @@ consultRouter.post('/', verifyAuth, async (req: AuthRequest, res) => {
     return res.status(400).json(body);
   }
 
-  const { pet_id, symptoms, photo_urls = [] } = parsed.data;
+  const { pet_id, symptoms, photo_urls = [], photo_data = [] } = parsed.data;
 
   const { data: pet, error } = await supabase
     .from('pets')
@@ -47,7 +48,8 @@ consultRouter.post('/', verifyAuth, async (req: AuthRequest, res) => {
     const result = await consultSymptoms(
       { name: pet.name, species: pet.species, breed: pet.breed, age_years: ageYears, weight_kg: pet.weight_kg },
       symptoms,
-      photo_urls
+      photo_urls,
+      photo_data,
     );
 
     await supabase.from('consult_sessions').insert({
