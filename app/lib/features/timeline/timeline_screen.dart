@@ -402,14 +402,8 @@ class _TimelineScreenState extends State<TimelineScreen> with TickerProviderStat
       ],
     ]);
 
-  Widget _genericBody(TimelineEvent event) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(event.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.deepBlue)),
-      if (event.content != null && event.content!.isNotEmpty) ...[
-        const SizedBox(height: 5),
-        Text(event.content!, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.5)),
-      ],
-    ]);
+  Widget _genericBody(TimelineEvent event) => Text(
+    event.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.deepBlue));
 
   Widget _buildEmpty() => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
     Container(width: 90, height: 90,

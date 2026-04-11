@@ -194,7 +194,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
             Text(statusEmoji, style: const TextStyle(fontSize: 42)),
             const SizedBox(width: 14),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(_petName ?? '宝贝', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(_petName ?? '宝贝', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
               Text(statusLabel, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
             ]),
           ]),
@@ -217,12 +217,13 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
   }
 
   Widget _statBadge(String label, String value) => Container(
+    height: 50,
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: Colors.white.withOpacity(0.22),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Column(children: [
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Text(label, style: const TextStyle(color: Colors.white60, fontSize: 10)),
       Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
     ]),

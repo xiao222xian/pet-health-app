@@ -116,6 +116,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (_birthDate != null) {
       payload['birth_date'] = _birthDate!.toIso8601String().substring(0, 10);
     }
+    if (_avatar != null && _avatar!.isNotEmpty) {
+      payload['avatar_url'] = _avatar;
+    }
 
     try {
       if (_existing != null) {
