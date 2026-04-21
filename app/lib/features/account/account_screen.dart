@@ -26,6 +26,50 @@ class _AccountScreenState extends State<AccountScreen> {
   String get _email =>
       Supabase.instance.client.auth.currentUser?.email ?? '未知邮箱';
 
+  Future<void> _deleteAccount() async {
+    // Step 1: warn
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (_) => CupertinoAlertDialog(
+        title: const Text('删除账号'),
+        content: const Text('此操作不可恢复。删除后，你的账号和所有宠物数据将被永久清除。'),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: false,
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('确认删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    // Step 2: call edge function
+    try {
+      await Supabase.instance.client.functions.invoke('delete-account');
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      if (mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (_) => CupertinoAlertDialog(
+            title: const Text('删除失败'),
+            content: const Text('请稍后重试，或联系客服处理。'),
+            actions: [CupertinoDialogAction(
+              child: const Text('确定'),
+              onPressed: () => Navigator.pop(context),
+            )],
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _signOut() async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -48,10 +92,8 @@ class _AccountScreenState extends State<AccountScreen> {
     );
     if (confirmed == true) {
       await Supabase.instance.client.auth.signOut();
-      if (mounted) {
-        // Use pushReplacement to ensure a clean navigation stack to auth
-        context.go('/auth');
-      }
+      // Router's refreshListenable handles redirect to /auth automatically.
+      // Do NOT call context.go('/auth') here — double-navigation causes white screen.
     }
   }
 
@@ -141,6 +183,14 @@ class _AccountScreenState extends State<AccountScreen> {
                 title: '退出登录',
                 subtitle: '退出后可重新登录',
                 onTap: _signOut,
+              ),
+              const SizedBox(height: 12),
+              _menuCard(
+                icon: CupertinoIcons.trash,
+                color: AppTheme.danger,
+                title: '删除账号',
+                subtitle: '永久删除账号及所有数据',
+                onTap: _deleteAccount,
               ),
             ])),
           ),

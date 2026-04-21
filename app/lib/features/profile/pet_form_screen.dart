@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import '../../shared/services/supabase_service.dart';
 import '../../shared/models/pet.dart';
 import '../../shared/widgets/loading_overlay.dart';
@@ -45,6 +49,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
   String? _breed;
   bool _isCustomBreed = false;
   String _avatar = '🐶';
+  File? _imageFile; // custom photo picked from gallery
   bool _saving = false;
   Pet? _existing;
 
@@ -78,8 +83,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
       _neutered = pet.neutered;
       _birthDate = pet.birthDate;
       _breed = pet.breed;
-      // 从notes/avatar字段恢复头像，若无则默认
-      _avatar = _defaultAvatarFor(pet.species);
+      // Restore saved avatar; fall back to species default only if none saved
+      _avatar = pet.avatarUrl ?? _defaultAvatarFor(pet.species);
     });
   }
 
@@ -87,6 +92,44 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (species == 'dog') return '🐶';
     if (species == 'cat') return '🐱';
     return '🐾';
+  }
+
+  Future<void> _pickCustomImage() async {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (_) => CupertinoActionSheet(
+        title: const Text('选择头像来源'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await ImagePicker().pickImage(
+                source: ImageSource.gallery, imageQuality: 80, maxWidth: 512);
+              if (picked != null && mounted) {
+                setState(() => _imageFile = File(picked.path));
+              }
+            },
+            child: const Text('从相册选择'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              final picked = await ImagePicker().pickImage(
+                source: ImageSource.camera, imageQuality: 80, maxWidth: 512);
+              if (picked != null && mounted) {
+                setState(() => _imageFile = File(picked.path));
+              }
+            },
+            child: const Text('拍照'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          isDestructiveAction: false,
+          child: const Text('取消'),
+        ),
+      ),
+    );
   }
 
   Future<void> _save() async {
@@ -116,7 +159,24 @@ class _PetFormScreenState extends State<PetFormScreen> {
     if (_birthDate != null) {
       payload['birth_date'] = _birthDate!.toIso8601String().substring(0, 10);
     }
-    if (_avatar != null && _avatar!.isNotEmpty) {
+    // Upload custom photo if user picked one, otherwise use emoji
+    if (_imageFile != null) {
+      try {
+        final userId = SupabaseService.userId!;
+        final fileName = '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final bytes = await _imageFile!.readAsBytes();
+        await SupabaseService.client.storage
+            .from('pet-avatars')
+            .uploadBinary(fileName, bytes,
+                fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true));
+        final url = SupabaseService.client.storage.from('pet-avatars').getPublicUrl(fileName);
+        payload['avatar_url'] = url;
+      } catch (e) {
+        if (mounted) _showError('头像上传失败，请先在 Supabase 创建公开 bucket "pet-avatars"');
+        if (mounted) setState(() => _saving = false);
+        return;
+      }
+    } else if (_avatar.isNotEmpty) {
       payload['avatar_url'] = _avatar;
     }
 
@@ -277,14 +337,34 @@ class _PetFormScreenState extends State<PetFormScreen> {
               // ── 头像选择 ──────────────────────────────
               Center(
                 child: Column(children: [
-                  Container(
-                    width: 90, height: 90,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                      boxShadow: AppTheme.cardShadowStrong,
+                  GestureDetector(
+                    onTap: _pickCustomImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 90, height: 90,
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            shape: BoxShape.circle,
+                            boxShadow: AppTheme.cardShadowStrong,
+                          ),
+                          child: ClipOval(child: _buildAvatarPreview()),
+                        ),
+                        Positioned(
+                          right: 0, bottom: 0,
+                          child: Container(
+                            width: 28, height: 28,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(CupertinoIcons.camera_fill,
+                              color: Colors.white, size: 14),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Center(child: Text(_avatar, style: const TextStyle(fontSize: 44))),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -296,9 +376,13 @@ class _PetFormScreenState extends State<PetFormScreen> {
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (_, i) {
                         final em = avatarList[i];
-                        final sel = em == _avatar;
+                        // Emoji is selected only when no custom image is active
+                        final sel = _imageFile == null && em == _avatar;
                         return GestureDetector(
-                          onTap: () => setState(() => _avatar = em),
+                          onTap: () => setState(() {
+                            _avatar = em;
+                            _imageFile = null; // clear custom image when emoji picked
+                          }),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             width: 42, height: 42,
@@ -317,7 +401,13 @@ class _PetFormScreenState extends State<PetFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('选择头像', style: TextStyle(fontSize: 11, color: AppTheme.textHint)),
+                  Text(
+                    _imageFile != null ? '已选择自定义照片' : '点击头像上传照片，或选择图标',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: _imageFile != null ? AppTheme.primary : AppTheme.textHint,
+                    ),
+                  ),
                 ]),
               ),
               const SizedBox(height: 24),
@@ -466,6 +556,21 @@ class _PetFormScreenState extends State<PetFormScreen> {
         ),
       ),
     );
+  }
+
+  // Renders avatar preview: local file > network URL > emoji
+  Widget _buildAvatarPreview() {
+    if (_imageFile != null) {
+      return Image.file(_imageFile!, width: 90, height: 90, fit: BoxFit.cover);
+    }
+    if (_avatar.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: _avatar, width: 90, height: 90, fit: BoxFit.cover,
+        placeholder: (_, __) => const Center(child: CupertinoActivityIndicator()),
+        errorWidget: (_, __, ___) => const Center(child: Text('🐾', style: TextStyle(fontSize: 44))),
+      );
+    }
+    return Center(child: Text(_avatar, style: const TextStyle(fontSize: 44)));
   }
 
   Widget _sectionCard({required List<Widget> children}) => Container(

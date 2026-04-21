@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/services/supabase_service.dart';
 import '../../shared/models/pet.dart';
 import '../../shared/models/medical_record.dart';
@@ -128,9 +129,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
               Container(width: 78, height: 78,
                 decoration: BoxDecoration(gradient: AppTheme.primaryGradient, shape: BoxShape.circle,
                   boxShadow: AppTheme.cardShadowStrong),
-                child: Center(child: Text(
-                  pet.species == 'cat' ? '🐱' : pet.species == 'dog' ? '🐶' : '🐾',
-                  style: const TextStyle(fontSize: 38)))),
+                child: ClipOval(child: _buildPetAvatar(pet, 78, 38))),
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
@@ -215,6 +214,26 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     ]),
   );
 
+  // Renders pet avatar: network photo > emoji fallback
+  Widget _buildPetAvatar(Pet pet, double size, double emojiSize) {
+    final url = pet.avatarUrl;
+    if (url != null && url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url, width: size, height: size, fit: BoxFit.cover,
+        placeholder: (_, __) => Center(child: Text(
+          pet.species == 'cat' ? '🐱' : pet.species == 'dog' ? '🐶' : '🐾',
+          style: TextStyle(fontSize: emojiSize))),
+        errorWidget: (_, __, ___) => Center(child: Text(
+          pet.species == 'cat' ? '🐱' : pet.species == 'dog' ? '🐶' : '🐾',
+          style: TextStyle(fontSize: emojiSize))),
+      );
+    }
+    final emoji = (url != null && url.isNotEmpty)
+        ? url
+        : (pet.species == 'cat' ? '🐱' : pet.species == 'dog' ? '🐶' : '🐾');
+    return Center(child: Text(emoji, style: TextStyle(fontSize: emojiSize)));
+  }
+
   // ── Pet switcher ─────────────────────────────────────
   Widget _buildPetSwitcher() {
     return SizedBox(
@@ -261,9 +280,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       border: sel ? null : Border.all(color: AppTheme.divider, width: 1.5),
                       boxShadow: sel ? AppTheme.cardShadowStrong : null,
                     ),
-                    child: Center(child: Text(
-                      p.species == 'cat' ? '🐱' : p.species == 'dog' ? '🐶' : '🐾',
-                      style: TextStyle(fontSize: sel ? 26 : 24)))),
+                    child: ClipOval(child: _buildPetAvatar(p, sel ? 52 : 48, sel ? 26 : 24))),
                   const SizedBox(height: 5),
                   Text(p.name,
                     style: TextStyle(fontSize: 10, fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
