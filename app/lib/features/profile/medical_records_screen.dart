@@ -645,7 +645,12 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                   final sel = _type == t.$1;
                   final color = _typeColor(t.$1);
                   return GestureDetector(
-                    onTap: () => setState(() => _type = t.$1),
+                    onTap: () => setState(() {
+                      _type = t.$1;
+                      _brandCtrl.clear();
+                      _dewormTypeCtrl.clear();
+                      _titleCtrl.clear();
+                    }),
                     child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         margin: const EdgeInsets.only(right: 8),
