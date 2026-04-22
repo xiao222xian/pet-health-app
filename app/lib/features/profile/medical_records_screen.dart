@@ -484,10 +484,15 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
     try {
       final photoUrls = await _uploadPhotos();
 
+      final autoTitle = _type == 'deworming'
+          ? (_dewormTypeCtrl.text.trim().isNotEmpty
+              ? _dewormTypeCtrl.text.trim()
+              : '驱虫记录')
+          : _titleCtrl.text.trim();
       final payload = {
         'pet_id': widget.petId,
-        'type': _type,
-        'title': _titleCtrl.text.trim(),
+        'type': encodeMedicalRecordType(_type),
+        'title': autoTitle,
         'record_date': _date.toIso8601String().substring(0, 10),
         if (_nextDue != null)
           'next_due_date': _nextDue!.toIso8601String().substring(0, 10),
@@ -674,12 +679,14 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
           ),
           const SizedBox(height: 20),
 
-          // Title
-          _label(_titleLabel),
-          const SizedBox(height: 8),
-          _textField(_titleCtrl, '输入${_titleLabel}',
-              onChanged: (_) => setState(() {})),
-          const SizedBox(height: 16),
+          // Title (hidden for deworming — auto-filled from deworm items)
+          if (_type != 'deworming') ...[
+            _label(_titleLabel),
+            const SizedBox(height: 8),
+            _textField(_titleCtrl, '输入${_titleLabel}',
+                onChanged: (_) => setState(() {})),
+            const SizedBox(height: 16),
+          ],
 
           // 疫苗品牌 (vaccine only)
           if (_type == 'vaccine') ...[
