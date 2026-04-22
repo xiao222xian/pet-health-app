@@ -20,22 +20,40 @@ class TimelineEvent {
   });
 
   factory TimelineEvent.fromJson(Map<String, dynamic> json) => TimelineEvent(
-    id: json['id'] as String,
-    petId: json['pet_id'] as String,
-    type: json['type'] as String,
-    title: json['title'] as String,
-    content: json['content'] as String?,
-    photoUrls: List<String>.from(json['photo_urls'] as List? ?? []),
-    eventDate: DateTime.parse(json['event_date'] as String),
-    createdAt: DateTime.parse(json['created_at'] as String),
-  );
+        id: json['id'] as String,
+        petId: json['pet_id'] as String,
+        type: normalizeTimelineEventType(json['type'] as String),
+        title: json['title'] as String,
+        content: json['content'] as String?,
+        photoUrls: List<String>.from(json['photo_urls'] as List? ?? []),
+        eventDate: DateTime.parse(json['event_date'] as String),
+        createdAt: DateTime.parse(json['created_at'] as String),
+      );
 
   Map<String, dynamic> toJson() => {
-    'pet_id': petId,
-    'type': type,
-    'title': title,
-    if (content != null) 'content': content,
-    'photo_urls': photoUrls,
-    'event_date': eventDate.toIso8601String().substring(0, 10),
-  };
+        'pet_id': petId,
+        'type': type,
+        'title': title,
+        if (content != null) 'content': content,
+        'photo_urls': photoUrls,
+        'event_date': eventDate.toIso8601String().substring(0, 10),
+      };
+}
+
+String normalizeTimelineEventType(String type) {
+  switch (type) {
+    case 'milestone':
+      return 'growth';
+    default:
+      return type;
+  }
+}
+
+String encodeTimelineEventType(String type) {
+  switch (type) {
+    case 'growth':
+      return 'milestone';
+    default:
+      return type;
+  }
 }

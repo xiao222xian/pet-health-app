@@ -135,7 +135,10 @@
       "Bash(break)",
       "Bash(flutter run *)",
       "Read(//tmp/**)",
-      "Bash(railway logs *)"
+      "Bash(railway logs *)",
+      "Bash(pkill -f \"flutter run\")",
+      "Bash(pkill -f \"dart.*flutter\")",
+      "Bash(dart analyze *)"
     ]
   }
 }

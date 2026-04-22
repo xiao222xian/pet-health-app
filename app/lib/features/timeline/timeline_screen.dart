@@ -515,7 +515,7 @@ class _TimelineScreenState extends State<TimelineScreen>
       case 'medical':
         return _medicalBody(event, cfg);
       default:
-        return _genericBody(event);
+        return _genericBody(event, cfg);
     }
   }
 
@@ -572,9 +572,64 @@ class _TimelineScreenState extends State<TimelineScreen>
         ],
       ]);
 
-  Widget _genericBody(TimelineEvent event) => Text(event.title,
-      style: const TextStyle(
-          fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.deepBlue));
+  Widget _genericBody(TimelineEvent event, _TypeConfig cfg) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(event.title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: AppTheme.deepBlue)),
+          if (event.photoUrls.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 68,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: event.photoUrls.length.clamp(0, 4),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, index) => ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        event.photoUrls[index],
+                        width: 68,
+                        height: 68,
+                        fit: BoxFit.cover,
+                      ),
+                      if (index == 3 && event.photoUrls.length > 4)
+                        Container(
+                          width: 68,
+                          height: 68,
+                          color: Colors.black.withOpacity(0.35),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '+${event.photoUrls.length - 4}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '点击卡片查看图片详情',
+              style: TextStyle(
+                fontSize: 11,
+                color: cfg.color.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      );
 
   Widget _buildEmpty() => Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -817,16 +872,30 @@ class _TimelineDetailSheet extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: event.photoUrls.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) => ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      event.photoUrls[i],
-                      width: 110,
-                      height: 110,
-                      fit: BoxFit.cover,
+                  itemBuilder: (_, i) => GestureDetector(
+                    onTap: () => showCupertinoDialog(
+                      context: context,
+                      builder: (_) => _TimelineGalleryViewer(
+                        photoUrls: event.photoUrls,
+                        initialIndex: i,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        event.photoUrls[i],
+                        width: 110,
+                        height: 110,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '点图片可放大查看',
+                style: TextStyle(fontSize: 11, color: AppTheme.textHint),
               ),
             ],
             const SizedBox(height: 20),
@@ -853,6 +922,97 @@ class _TimelineDetailSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TimelineGalleryViewer extends StatefulWidget {
+  final List<String> photoUrls;
+  final int initialIndex;
+
+  const _TimelineGalleryViewer({
+    required this.photoUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_TimelineGalleryViewer> createState() => _TimelineGalleryViewerState();
+}
+
+class _TimelineGalleryViewerState extends State<_TimelineGalleryViewer> {
+  late final PageController _controller;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      backgroundColor: Colors.black.withOpacity(0.92),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.photoUrls.length,
+            onPageChanged: (value) => setState(() => _currentIndex = value),
+            itemBuilder: (_, index) => InteractiveViewer(
+              minScale: 0.9,
+              maxScale: 4,
+              child: Center(
+                child: Image.network(
+                  widget.photoUrls[index],
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.xmark,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_currentIndex + 1} / ${widget.photoUrls.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -75,13 +75,12 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   }
 
   Future<void> _loadExtras(String petId) async {
-    final soon = DateTime.now().add(const Duration(days: 30));
     final results = await Future.wait([
       SupabaseService.client
           .from('medical_records')
           .select()
           .eq('pet_id', petId)
-          .lte('next_due_date', soon.toIso8601String().substring(0, 10))
+          .not('next_due_date', 'is', null)
           .order('next_due_date'),
       SupabaseService.client
           .from('health_logs')
@@ -502,13 +501,15 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   // ── Quick stats row ──────────────────────────────────
   Widget _buildStatsRow() {
     final lastLog = _stats?['last_log'] as String?;
-    // Pick most recent upcoming medical record for reminder
-    final nextReminder =
-        _upcomingRecords.isNotEmpty ? _upcomingRecords.first : null;
-    final reminderLabel = nextReminder != null ? '备忘录' : '备忘录';
-    final reminderValue = nextReminder?.nextDueDate != null
-        ? '${nextReminder!.nextDueDate!.month}月${nextReminder.nextDueDate!.day}日${_typeShortLabel(nextReminder.type)}'
-        : (nextReminder != null ? _typeShortLabel(nextReminder.type) : '-');
+    final nextReminder = _nextReminderRecord();
+    final reminderLabel = nextReminder == null
+        ? '暂无提醒'
+        : _isOverdue(nextReminder)
+            ? '已逾期'
+            : '下个提醒';
+    final reminderValue = nextReminder == null
+        ? '-'
+        : '${nextReminder.nextDueDate!.month}月${nextReminder.nextDueDate!.day}日${_typeShortLabel(nextReminder.type)}';
     // Latest health log status
     final appetiteLevel = _stats?['appetite'] as int?;
     final statusLabel = _statusStr(appetiteLevel);
@@ -537,6 +538,28 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       default:
         return '健康备忘';
     }
+  }
+
+  MedicalRecord? _nextReminderRecord() {
+    if (_upcomingRecords.isEmpty) return null;
+    final overdue = _upcomingRecords.where(_isOverdue).toList();
+    if (overdue.isNotEmpty) {
+      overdue.sort((a, b) => a.nextDueDate!.compareTo(b.nextDueDate!));
+      return overdue.first;
+    }
+    final upcoming = _upcomingRecords.where((record) => !_isOverdue(record)).toList();
+    if (upcoming.isEmpty) return null;
+    upcoming.sort((a, b) => a.nextDueDate!.compareTo(b.nextDueDate!));
+    return upcoming.first;
+  }
+
+  bool _isOverdue(MedicalRecord record) {
+    final due = record.nextDueDate;
+    if (due == null) return false;
+    final today = DateTime.now();
+    final current = DateTime(today.year, today.month, today.day);
+    final target = DateTime(due.year, due.month, due.day);
+    return target.isBefore(current);
   }
 
   String _statusStr(int? level) {

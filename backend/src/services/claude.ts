@@ -11,7 +11,7 @@ const groqClient = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openrouter/auto';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'google/gemini-2.0-flash-001';
 const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant';
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-flash-latest';
 const DISCLAIMER = '本结果仅供参考，不构成兽医诊断意见。如有紧急情况请立即就医。';
@@ -30,6 +30,62 @@ function buildPetSummary(petInfo: {
   weight_kg?: number;
 }) {
   return `宠物：${petInfo.name}，${petInfo.species}${petInfo.breed ? `（${petInfo.breed}）` : ''}${petInfo.age_years ? `，${petInfo.age_years}岁` : ''}${petInfo.weight_kg ? `，${petInfo.weight_kg}kg` : ''}`;
+}
+
+function consultSystemPrompt() {
+  return `你是一名谨慎、耐心、表达自然的宠物健康分诊助手。
+你的任务不是做确诊，而是根据主人提供的症状，给出贴近实际的初步判断、居家护理建议、观察重点，以及明确的就医时机。
+
+严格输出 JSON，不要输出 Markdown，不要输出代码块，不要输出额外说明：
+{
+  "risk_level": "low|medium|high|emergency",
+  "summary": "2-3句，结合当前描述给出初步判断，不要空泛",
+  "possible_causes": ["2-4条，写可能原因或方向，避免确定性诊断"],
+  "home_care": ["3-5条，写具体可执行的居家处理步骤"],
+  "watch_points": ["2-4条，写接下来要重点观察的表现"],
+  "when_to_seek_vet": ["2-4条，写明确触发就医的具体情况"],
+  "follow_up_question": "如果信息不足，追问1个最关键的问题；如果信息已经比较充分，返回空字符串",
+  "seek_vet": true
+}
+
+规则：
+1. 全部用中文，语气像专业但克制的问诊助手。
+2. 必须结合用户当前描述回答，避免模板化空话。
+3. 不要直接给出确定性疾病诊断，只能说“可能”“需要结合进一步表现判断”。
+4. 不要动不动建议立刻就医；只有出现明确危险信号时，才把 risk_level 设为 high 或 emergency。
+5. home_care 要尽量具体，比如观察多久、补水、饮食、环境、休息，而不是泛泛地说“注意观察”。
+6. when_to_seek_vet 必须写具体触发条件，比如“连续呕吐超过几次”“精神持续很差”“无法进食进水”“呼吸明显急促”等。
+7. 如果信息明显不足，follow_up_question 必须只问一个最关键的问题，帮助下一轮判断。`;
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item ?? '').trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
+function normalizeConsultResponse(parsed: any): ConsultResponse {
+  const homeCare = normalizeStringArray(parsed.home_care);
+  const watchPoints = normalizeStringArray(parsed.watch_points);
+  const whenToSeekVet = normalizeStringArray(parsed.when_to_seek_vet);
+  const advice = homeCare.length > 0
+    ? homeCare
+    : normalizeStringArray(parsed.advice);
+
+  return {
+    risk_level: parsed.risk_level,
+    summary: String(parsed.summary ?? '').trim(),
+    possible_causes: normalizeStringArray(parsed.possible_causes),
+    home_care: homeCare,
+    watch_points: watchPoints,
+    when_to_seek_vet: whenToSeekVet,
+    follow_up_question: String(parsed.follow_up_question ?? '').trim(),
+    advice,
+    seek_vet: Boolean(parsed.seek_vet),
+    disclaimer: DISCLAIMER,
+  };
 }
 
 async function callGemini(textPrompt: string, systemPrompt: string, photoData: string[] = []) {
@@ -109,48 +165,39 @@ export async function consultSymptoms(
     });
   }
 
-  const systemPrompt = `你是一个宠物健康助理，帮助宠物主人了解症状严重程度。
-严格按照以下JSON格式返回，不要有其他内容：
-{
-  "risk_level": "low|medium|high|emergency",
-  "summary": "1-2句摘要",
-  "advice": ["建议1", "建议2", "建议3"],
-  "seek_vet": true
-}
-规则：
-1. 用中文。
-2. 给出3-5条具体建议。
-3. 绝不做确定性诊断。
-4. 只有在确有紧急风险时才把 risk_level 设为 emergency 或 high。`;
+  const systemPrompt = consultSystemPrompt();
 
   let text = '';
   try {
-    const response = await openRouterClient.chat.completions.create({
-      model: OPENROUTER_MODEL,
-      temperature: 0.3,
-      max_tokens: 900,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: multimodalContent,
-        },
-      ],
-    });
-    text = response.choices[0]?.message?.content ?? '';
+    const geminiPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}\n\n请像宠物分诊助手一样回答，并严格输出 JSON。`;
+    text = await callGemini(geminiPrompt, systemPrompt, photoData);
   } catch (error) {
     try {
-      if (!process.env.GROQ_API_KEY) {
+      if (!process.env.OPENROUTER_API_KEY) {
         throw error;
       }
-      const textOnlyPrompt = `${buildPetSummary(petInfo)}\n\n症状：${symptoms}${photoData.length > 0 ? '\n\n补充：用户还上传了宠物照片，但当前后备模型只按文字信息分析。' : ''}`;
+      const fallbackResponse = await openRouterClient.chat.completions.create({
+        model: OPENROUTER_MODEL,
+        temperature: 0.3,
+        max_tokens: 1100,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: multimodalContent,
+          },
+        ],
+      });
+      text = fallbackResponse.choices[0]?.message?.content ?? '';
+    } catch {
+      const textOnlyPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}${photoData.length > 0 ? '\n\n补充：主人还上传了宠物照片，但当前后备模型只能基于文字分析。' : ''}`;
       const fallbackResponse = await groqClient.chat.completions.create({
         model: GROQ_MODEL,
         temperature: 0.3,
-        max_tokens: 900,
+        max_tokens: 1000,
         messages: [
           {
             role: 'system',
@@ -163,20 +210,11 @@ export async function consultSymptoms(
         ],
       });
       text = fallbackResponse.choices[0]?.message?.content ?? '';
-    } catch {
-      const geminiPrompt = `${buildPetSummary(petInfo)}\n\n症状：${symptoms}\n\n请按要求严格输出 JSON。`;
-      text = await callGemini(geminiPrompt, systemPrompt, photoData);
     }
   }
 
   const parsed = extractJson(text) as any;
-  return {
-    risk_level: parsed.risk_level,
-    summary: parsed.summary,
-    advice: Array.isArray(parsed.advice) ? parsed.advice : [],
-    seek_vet: Boolean(parsed.seek_vet),
-    disclaimer: DISCLAIMER,
-  };
+  return normalizeConsultResponse(parsed);
 }
 
 export async function getNutritionAdvice(petInfo: {

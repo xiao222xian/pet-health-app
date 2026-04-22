@@ -14,7 +14,7 @@ const supabase = createClient(
 
 const ConsultSchema = z.object({
   pet_id: z.string().uuid(),
-  symptoms: z.string().min(3).max(1000),
+  symptoms: z.string().min(3).max(5000),
   photo_urls: z.array(z.string().url()).max(3).optional(),
   photo_data: z.array(z.string()).max(3).optional(), // base64-encoded images
 });

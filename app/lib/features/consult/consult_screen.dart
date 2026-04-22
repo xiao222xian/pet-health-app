@@ -13,8 +13,12 @@ class _Msg {
   final bool isUser;
   final String text;
   final List<File> photos;
+  final Map<String, dynamic>? consultData;
   const _Msg(
-      {required this.isUser, required this.text, this.photos = const []});
+      {required this.isUser,
+      required this.text,
+      this.photos = const [],
+      this.consultData});
 }
 
 // ── Risk config ───────────────────────────────────────────
@@ -215,12 +219,8 @@ class _ConsultScreenState extends State<ConsultScreen> {
       final photos64 = await Future.wait(
           photos.map((f) async => base64Encode(await f.readAsBytes())));
 
-      // Include conversation history as context so replies are specific
       final history = _conversationHistory();
-      final prompt = '${history}主人当前问题：$text\n\n'
-          '请用对话方式具体分析上述症状，给出针对性的初步判断。'
-          '如果症状轻微，提供可以先在家观察和处理的具体方法；'
-          '只有当症状确实紧急时才建议立即就医，请给出具体判断依据，不要笼统。';
+      final prompt = '${history}主人这次补充：$text';
 
       final res = await ApiService.post('/consult', {
         'pet_id': _petId,
@@ -230,7 +230,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
 
       if (mounted) {
         setState(() {
-          _msgs.add(_Msg(isUser: false, text: _extractReply(res)));
+          _msgs.add(_Msg(isUser: false, text: '', consultData: res));
           _thinking = false;
         });
         _scrollToBottom();
@@ -251,27 +251,6 @@ class _ConsultScreenState extends State<ConsultScreen> {
     final lines =
         _msgs.map((m) => '${m.isUser ? "主人" : "助手"}：${m.text}').join('\n');
     return '【此前对话记录】\n$lines\n\n';
-  }
-
-  String _extractReply(Map<String, dynamic> res) {
-    final summary = (res['summary'] as String? ?? '').trim();
-    final advice = res['advice'] as List? ?? [];
-    final risk = res['risk_level'] as String? ?? 'low';
-
-    final buf = StringBuffer();
-    if (summary.isNotEmpty) buf.writeln(summary);
-    if (advice.isNotEmpty) {
-      buf.writeln();
-      buf.writeln('💡 具体建议：');
-      for (final a in advice.take(3)) buf.writeln('• $a');
-    }
-    if (risk == 'emergency') {
-      buf.writeln('\n🚨 情况紧急，请立即前往宠物医院！');
-    } else if (risk == 'high') {
-      buf.writeln('\n⚠️ 症状较严重，建议今天内就医。');
-    }
-    final result = buf.toString().trim();
-    return result.isNotEmpty ? result : '请继续描述症状，我会帮你进一步分析。';
   }
 
   Future<void> _endSession() async {
@@ -308,11 +287,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
           .map((m) => '${m.isUser ? "主人" : "AI助手"}：${m.text}')
           .join('\n\n');
 
-      final prompt = '请根据以下完整问诊对话，给出具体综合建议。要求：\n'
-          '1. 具体分析可能原因（结合描述的实际症状）\n'
-          '2. 详细的居家护理方案（可操作步骤）\n'
-          '3. 明确的就医时机（什么具体症状出现时才需要去医院，而不是笼统建议）\n'
-          '4. 日常预防建议\n\n'
+      final prompt = '以下是本次完整问诊对话，请基于全部信息给出一份更完整、更稳妥的综合分诊建议。\n\n'
           '完整问诊记录：\n$fullHistory';
 
       final res = await ApiService.post('/consult', {
@@ -903,20 +878,24 @@ class _ConsultScreenState extends State<ConsultScreen> {
         _AiAvatar(),
         const SizedBox(width: 8),
         Flexible(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(18),
-                    topRight: Radius.circular(18),
-                    bottomRight: Radius.circular(18),
-                    bottomLeft: Radius.circular(4)),
-                boxShadow: AppTheme.cardShadow),
-            child: Text(msg.text,
-                style: const TextStyle(
-                    fontSize: 14, color: AppTheme.deepBlue, height: 1.65)),
-          ),
+          child: msg.consultData != null
+              ? _ConsultStructuredCard(response: msg.consultData!)
+              : Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(18),
+                          topRight: Radius.circular(18),
+                          bottomRight: Radius.circular(18),
+                          bottomLeft: Radius.circular(4)),
+                      boxShadow: AppTheme.cardShadow),
+                  child: Text(msg.text,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.deepBlue,
+                          height: 1.65)),
+                ),
         ),
       ]),
     );
@@ -925,18 +904,9 @@ class _ConsultScreenState extends State<ConsultScreen> {
   // ── Final advice card ─────────────────────────────────
 
   Widget _buildFinalAdvice(Map<String, dynamic> res) {
-    final risk =
-        res['risk_level'] is String ? res['risk_level'] as String : 'low';
-    final cfg = _riskCfg(risk);
-    final rawAdvice = res['advice'];
-    final advice = rawAdvice is List ? rawAdvice : <dynamic>[];
-    final summary =
-        (res['summary'] is String ? res['summary'] as String : '').trim();
-
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 6),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Section label
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
@@ -954,133 +924,13 @@ class _ConsultScreenState extends State<ConsultScreen> {
           ]),
         ),
         const SizedBox(height: 10),
-
-        // Risk + summary card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-                colors: [cfg.color.withOpacity(0.88), cfg.color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                  color: cfg.color.withOpacity(0.32),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6))
-            ],
-          ),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      shape: BoxShape.circle),
-                  child: Icon(cfg.icon, color: Colors.white, size: 16)),
-              const SizedBox(width: 8),
-              Text(cfg.label,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16)),
-            ]),
-            if (summary.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(summary,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 13, height: 1.65)),
-            ],
-          ]),
-        ),
-
-        // Advice list
-        if (advice.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: AppTheme.cardShadow),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Row(children: [
-                Text('💡', style: TextStyle(fontSize: 15)),
-                SizedBox(width: 8),
-                Text('综合护理方案',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: AppTheme.deepBlue)),
-              ]),
-              const SizedBox(height: 12),
-              ...List.generate(
-                  advice.length,
-                  (i) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: BoxDecoration(
-                                      gradient: AppTheme.primaryGradient,
-                                      shape: BoxShape.circle),
-                                  child: Center(
-                                      child: Text('${i + 1}',
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white)))),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                  child: Text(advice[i].toString(),
-                                      style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF3D3560),
-                                          height: 1.65))),
-                            ]),
-                      )),
-            ]),
-          ),
-        ],
-
-        // Disclaimer
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-              color: const Color(0xFFF8F7FC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE0DBF0))),
-          child: Text(res['disclaimer'] as String? ?? '以上内容仅供参考，不构成专业兽医诊断意见。',
-              style: TextStyle(
-                  fontSize: 11, color: Colors.grey.shade500, height: 1.4)),
+        _ConsultStructuredCard(
+          response: res,
+          showDisclaimer: true,
+          emphasizeRisk: true,
         ),
       ]),
     );
-  }
-
-  _RiskCfg _riskCfg(String risk) {
-    switch (risk) {
-      case 'emergency':
-        return _RiskCfg(AppTheme.danger,
-            CupertinoIcons.exclamationmark_triangle_fill, '🚨 紧急，请立即就医');
-      case 'high':
-        return _RiskCfg(const Color(0xFFFF5722),
-            CupertinoIcons.exclamationmark_circle_fill, '⚠️ 症状较重，建议今日就医');
-      case 'medium':
-        return _RiskCfg(AppTheme.warning, CupertinoIcons.exclamationmark_circle,
-            '🔶 中等，注意观察');
-      default:
-        return _RiskCfg(AppTheme.success, CupertinoIcons.checkmark_circle_fill,
-            '✅ 轻微，可在家观察');
-    }
   }
 
   // ── Input bar ─────────────────────────────────────────
@@ -1255,6 +1105,342 @@ class _AiAvatar extends StatelessWidget {
   }
 }
 
+_RiskCfg _riskCfg(String risk) {
+  switch (risk) {
+    case 'emergency':
+      return _RiskCfg(AppTheme.danger,
+          CupertinoIcons.exclamationmark_triangle_fill, '🚨 紧急，建议立即就医');
+    case 'high':
+      return _RiskCfg(const Color(0xFFFF5722),
+          CupertinoIcons.exclamationmark_circle_fill, '⚠️ 风险较高，建议尽快就医');
+    case 'medium':
+      return _RiskCfg(AppTheme.warning, CupertinoIcons.exclamationmark_circle,
+          '🔶 中等风险，建议重点观察');
+    default:
+      return _RiskCfg(AppTheme.success, CupertinoIcons.checkmark_circle_fill,
+          '✅ 当前偏轻，可先居家观察');
+  }
+}
+
+List<String> _stringList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((item) => item?.toString().trim() ?? '')
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+class _ConsultStructuredCard extends StatelessWidget {
+  final Map<String, dynamic> response;
+  final bool showDisclaimer;
+  final bool emphasizeRisk;
+
+  const _ConsultStructuredCard({
+    required this.response,
+    this.showDisclaimer = false,
+    this.emphasizeRisk = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final risk = response['risk_level'] as String? ?? 'low';
+    final cfg = _riskCfg(risk);
+    final summary = (response['summary'] as String? ?? '').trim();
+    final possibleCauses = _stringList(response['possible_causes']);
+    final homeCare = _stringList(response['home_care']);
+    final watchPoints = _stringList(response['watch_points']);
+    final whenToSeekVet = _stringList(response['when_to_seek_vet']);
+    final followUpQuestion =
+        (response['follow_up_question'] as String? ?? '').trim();
+    final legacyAdvice = _stringList(response['advice']);
+
+    final careItems = homeCare.isNotEmpty ? homeCare : legacyAdvice;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: emphasizeRisk
+                  ? [cfg.color.withOpacity(0.88), cfg.color]
+                  : [Colors.white, Colors.white],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: AppTheme.cardShadow,
+            border: emphasizeRisk
+                ? null
+                : Border.all(color: cfg.color.withOpacity(0.16)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: emphasizeRisk
+                          ? Colors.white.withOpacity(0.22)
+                          : cfg.color.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      cfg.icon,
+                      color: emphasizeRisk ? Colors.white : cfg.color,
+                      size: 15,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cfg.label,
+                          style: TextStyle(
+                            color: emphasizeRisk ? Colors.white : cfg.color,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        if (summary.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            summary,
+                            style: TextStyle(
+                              color: emphasizeRisk
+                                  ? Colors.white
+                                  : AppTheme.deepBlue,
+                              fontSize: 13,
+                              height: 1.65,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (possibleCauses.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _ConsultSectionCard(
+            icon: CupertinoIcons.search,
+            title: '可能原因',
+            items: possibleCauses,
+          ),
+        ],
+        if (careItems.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _ConsultSectionCard(
+            icon: CupertinoIcons.heart,
+            title: '居家护理',
+            items: careItems,
+          ),
+        ],
+        if (watchPoints.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _ConsultSectionCard(
+            icon: CupertinoIcons.eye,
+            title: '接下来观察什么',
+            items: watchPoints,
+          ),
+        ],
+        if (whenToSeekVet.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _ConsultSectionCard(
+            icon: CupertinoIcons.exclamationmark_shield_fill,
+            title: '这些情况建议就医',
+            items: whenToSeekVet,
+            accent: const Color(0xFFFFEDEA),
+            iconColor: const Color(0xFFE75A4D),
+          ),
+        ],
+        if (followUpQuestion.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F7FC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE4DDF4)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySoft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.question_circle_fill,
+                    size: 15,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '我还想继续确认',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.deepBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        followUpQuestion,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textPrimary,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (showDisclaimer) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F7FC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE0DBF0)),
+            ),
+            child: Text(
+              response['disclaimer'] as String? ?? '以上内容仅供参考，不构成专业兽医诊断意见。',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ConsultSectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<String> items;
+  final Color accent;
+  final Color iconColor;
+
+  const _ConsultSectionCard({
+    required this.icon,
+    required this.title,
+    required this.items,
+    this.accent = const Color(0xFFF8F7FC),
+    this.iconColor = AppTheme.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 15, color: iconColor),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: AppTheme.deepBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...List.generate(
+            items.length,
+            (index) => Padding(
+              padding:
+                  EdgeInsets.only(bottom: index == items.length - 1 ? 0 : 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: iconColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      items[index],
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.textPrimary,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ConsultHistorySheet extends StatelessWidget {
   final String petName;
   final List<Map<String, dynamic>> sessions;
@@ -1415,8 +1601,6 @@ class _ConsultHistoryDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final summary = ai?['summary'] as String? ?? '';
-    final advice = ai?['advice'] as List? ?? const [];
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.background,
@@ -1450,44 +1634,12 @@ class _ConsultHistoryDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             _historyBlock('主人提问', symptoms),
-            if (summary.isNotEmpty) ...[
+            if (ai != null) ...[
               const SizedBox(height: 12),
-              _historyBlock('综合分析', summary),
-            ],
-            if (advice.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: AppTheme.cardShadow,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '建议方案',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.deepBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ...advice.map((item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            '• ${item.toString()}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textPrimary,
-                              height: 1.6,
-                            ),
-                          ),
-                        )),
-                  ],
-                ),
+              _ConsultStructuredCard(
+                response: ai!,
+                showDisclaimer: true,
+                emphasizeRisk: true,
               ),
             ],
           ],

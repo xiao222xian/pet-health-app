@@ -32,7 +32,7 @@ class MedicalRecord {
   factory MedicalRecord.fromJson(Map<String, dynamic> json) => MedicalRecord(
         id: json['id'] as String,
         petId: json['pet_id'] as String,
-        type: json['type'] as String,
+        type: normalizeMedicalRecordType(json['type'] as String),
         title: json['title'] as String,
         recordDate: DateTime.parse(json['record_date'] as String),
         nextDueDate: json['next_due_date'] != null
@@ -61,4 +61,26 @@ class MedicalRecord {
         if (cost != null) 'cost': cost,
         'photo_urls': photoUrls,
       };
+}
+
+String normalizeMedicalRecordType(String type) {
+  switch (type) {
+    case 'disease':
+      return 'surgery';
+    case 'allergy':
+      return 'other';
+    default:
+      return type;
+  }
+}
+
+String encodeMedicalRecordType(String type) {
+  switch (type) {
+    case 'surgery':
+      return 'disease';
+    case 'other':
+      return 'allergy';
+    default:
+      return type;
+  }
 }

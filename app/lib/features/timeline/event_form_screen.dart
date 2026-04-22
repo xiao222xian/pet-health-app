@@ -121,7 +121,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
       final photoUrls = await _uploadPhotos();
       final payload = {
         'pet_id': _resolvedPetId,
-        'type': _type,
+        'type': encodeTimelineEventType(_type),
         'title': title,
         'content': content,
         'photo_urls': photoUrls,
@@ -566,16 +566,19 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   Widget _remotePhotoThumb(int index, String url) => Stack(
         children: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            width: 84,
-            height: 84,
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: AppTheme.cardShadow,
+          GestureDetector(
+            onTap: () => _openPhotoViewer(index),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              width: 84,
+              height: 84,
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: AppTheme.cardShadow,
+              ),
+              child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
             ),
-            child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
           ),
           Positioned(
             top: 4,
@@ -590,16 +593,19 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   Widget _localPhotoThumb(int index, File file) => Stack(
         children: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            width: 84,
-            height: 84,
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: AppTheme.cardShadow,
+          GestureDetector(
+            onTap: () => _openPhotoViewer(_existingPhotos.length + index),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              width: 84,
+              height: 84,
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: AppTheme.cardShadow,
+              ),
+              child: Image.file(file, fit: BoxFit.cover),
             ),
-            child: Image.file(file, fit: BoxFit.cover),
           ),
           Positioned(
             top: 4,
@@ -619,6 +625,21 @@ class _EventFormScreenState extends State<EventFormScreen> {
             const BoxDecoration(color: Colors.black87, shape: BoxShape.circle),
         child: const Icon(CupertinoIcons.xmark, size: 12, color: Colors.white),
       );
+
+  void _openPhotoViewer(int initialIndex) {
+    final sources = [
+      ..._existingPhotos.map((url) => _TimelinePhotoSource.network(url)),
+      ..._newPhotos.map((file) => _TimelinePhotoSource.local(file)),
+    ];
+    if (sources.isEmpty) return;
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (_) => _TimelinePhotoViewer(
+        sources: sources,
+        initialIndex: initialIndex.clamp(0, sources.length - 1),
+      ),
+    );
+  }
 
   String _typeLabel() => widget.eventId == null
       ? '添加${_typeName(_type)}'
@@ -640,5 +661,121 @@ class _EventFormScreenState extends State<EventFormScreen> {
       default:
         return AppTheme.primary;
     }
+  }
+}
+
+class _TimelinePhotoSource {
+  final String? url;
+  final File? file;
+
+  const _TimelinePhotoSource._({this.url, this.file});
+
+  factory _TimelinePhotoSource.network(String url) =>
+      _TimelinePhotoSource._(url: url);
+
+  factory _TimelinePhotoSource.local(File file) =>
+      _TimelinePhotoSource._(file: file);
+}
+
+class _TimelinePhotoViewer extends StatefulWidget {
+  final List<_TimelinePhotoSource> sources;
+  final int initialIndex;
+
+  const _TimelinePhotoViewer({
+    required this.sources,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_TimelinePhotoViewer> createState() => _TimelinePhotoViewerState();
+}
+
+class _TimelinePhotoViewerState extends State<_TimelinePhotoViewer> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      backgroundColor: Colors.black.withOpacity(0.92),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.sources.length,
+            onPageChanged: (value) => setState(() => _currentIndex = value),
+            itemBuilder: (_, index) {
+              final source = widget.sources[index];
+              final image = source.file != null
+                  ? Image.file(source.file!, fit: BoxFit.contain)
+                  : CachedNetworkImage(
+                      imageUrl: source.url!,
+                      fit: BoxFit.contain,
+                      placeholder: (_, __) => const Center(
+                        child: CupertinoActivityIndicator(color: Colors.white),
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
+                        CupertinoIcons.photo,
+                        color: Colors.white70,
+                        size: 48,
+                      ),
+                    );
+              return InteractiveViewer(
+                minScale: 0.9,
+                maxScale: 4,
+                child: Center(child: image),
+              );
+            },
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.xmark,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_currentIndex + 1} / ${widget.sources.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

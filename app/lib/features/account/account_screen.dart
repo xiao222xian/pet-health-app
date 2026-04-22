@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -140,8 +141,8 @@ class _AccountScreenState extends State<AccountScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
             color: AppTheme.background,
@@ -248,7 +249,9 @@ class _AccountScreenState extends State<AccountScreen> {
 
     try {
       await Supabase.instance.client.functions.invoke('delete-account');
-      await Supabase.instance.client.auth.signOut();
+      await SupabaseService.signOut();
+      if (!mounted) return;
+      context.go('/auth');
     } catch (_) {
       if (!mounted) return;
       showCupertinoDialog(
@@ -288,7 +291,9 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
     if (confirmed == true) {
-      await Supabase.instance.client.auth.signOut();
+      await SupabaseService.signOut();
+      if (!mounted) return;
+      context.go('/auth');
     }
   }
 
@@ -332,16 +337,10 @@ class _AccountScreenState extends State<AccountScreen> {
               CupertinoSliverNavigationBar(
                 backgroundColor: Colors.transparent,
                 border: null,
-                largeTitle: const Text(
-                  '我的',
-                  style: TextStyle(
-                    color: AppTheme.deepBlue,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                largeTitle: const SizedBox.shrink(),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 60),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 60),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Center(

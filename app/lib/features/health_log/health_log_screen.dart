@@ -262,11 +262,11 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
       final level = log.appetiteLevel ?? 3;
       if (level >= 4) {
         statusColor = AppTheme.success;
-        statusEmoji = '😊';
+        statusEmoji = '😄';
         statusLabel = '状态很棒';
       } else if (level == 3) {
         statusColor = const Color(0xFF26A69A);
-        statusEmoji = '😐';
+        statusEmoji = '🙂';
         statusLabel = '状态正常';
       } else if (level == 2) {
         statusColor = AppTheme.warning;
@@ -489,10 +489,10 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
     if (level != null) {
       if (level >= 4) {
         statusColor = AppTheme.success;
-        emoji = '😊';
+        emoji = '😄';
       } else if (level == 3) {
         statusColor = const Color(0xFF26A69A);
-        emoji = '😐';
+        emoji = '🙂';
       } else if (level == 2) {
         statusColor = AppTheme.warning;
         emoji = '😟';
@@ -1071,8 +1071,8 @@ class _EntrySheetState extends State<_EntrySheet> {
     const options = [
       (1, '😫', '很差'),
       (2, '😟', '欠佳'),
-      (3, '😐', '正常'),
-      (4, '😊', '很棒'),
+      (3, '🙂', '正常'),
+      (4, '😄', '很棒'),
     ];
     return Row(
       children: options.map((o) {

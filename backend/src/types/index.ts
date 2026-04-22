@@ -7,6 +7,11 @@ export interface ConsultRequest {
 export interface ConsultResponse {
   risk_level: 'low' | 'medium' | 'high' | 'emergency';
   summary: string;
+  possible_causes: string[];
+  home_care: string[];
+  watch_points: string[];
+  when_to_seek_vet: string[];
+  follow_up_question: string;
   advice: string[];
   seek_vet: boolean;
   disclaimer: string;
