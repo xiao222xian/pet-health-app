@@ -578,17 +578,17 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   void _confirmDelete(Pet pet) {
     showCupertinoDialog(
         context: context,
-        builder: (_) => CupertinoAlertDialog(
+        builder: (ctx) => CupertinoAlertDialog(
               title: Text('删除「${pet.name}」?'),
               content: const Text('删除后所有相关数据将无法恢复。'),
               actions: [
                 CupertinoDialogAction(
                     child: const Text('取消'),
-                    onPressed: () => Navigator.pop(context)),
+                    onPressed: () => Navigator.pop(ctx)),
                 CupertinoDialogAction(
                     isDestructiveAction: true,
                     onPressed: () async {
-                      Navigator.pop(context);
+                      Navigator.pop(ctx);
                       await SupabaseService.client
                           .from('pets')
                           .delete()

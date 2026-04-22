@@ -141,13 +141,13 @@ class _EventFormScreenState extends State<EventFormScreen> {
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (_) => CupertinoAlertDialog(
+        builder: (ctx) => CupertinoAlertDialog(
           title: const Text('保存失败'),
           content: Text(e.toString()),
           actions: [
             CupertinoDialogAction(
               child: const Text('确定'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
             ),
           ],
         ),

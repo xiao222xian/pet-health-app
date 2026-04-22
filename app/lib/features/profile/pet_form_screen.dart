@@ -126,12 +126,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
   Future<void> _pickCustomImage() async {
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => CupertinoActionSheet(
+      builder: (sheetContext) => CupertinoActionSheet(
         title: const Text('选择头像来源'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               final picked = await ImagePicker().pickImage(
                   source: ImageSource.gallery, imageQuality: 80, maxWidth: 512);
               if (picked != null && mounted) {
@@ -142,7 +142,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
           ),
           CupertinoActionSheetAction(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               final picked = await ImagePicker().pickImage(
                   source: ImageSource.camera, imageQuality: 80, maxWidth: 512);
               if (picked != null && mounted) {
@@ -153,7 +153,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(sheetContext),
           isDestructiveAction: false,
           child: const Text('取消'),
         ),
@@ -226,12 +226,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
   void _showError(String msg) {
     showCupertinoDialog(
       context: context,
-      builder: (_) => CupertinoAlertDialog(
+      builder: (ctx) => CupertinoAlertDialog(
         title: const Text('提示'),
         content: Text(msg),
         actions: [
           CupertinoDialogAction(
-              child: const Text('确定'), onPressed: () => Navigator.pop(context))
+              child: const Text('确定'), onPressed: () => Navigator.pop(ctx))
         ],
       ),
     );
@@ -245,8 +245,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
 
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => Container(
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+      builder: (sheetContext) => Container(
+        color: CupertinoColors.systemBackground.resolveFrom(sheetContext),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // Handle
           Container(
@@ -269,7 +269,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 child: const Text('取消'),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(sheetContext),
               ),
             ]),
           ),
@@ -299,7 +299,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                                 _species = isdog ? 'dog' : 'cat';
                                 _avatar = isdog ? '🐶' : '🐱';
                               });
-                              Navigator.pop(context);
+                              Navigator.pop(sheetContext);
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -345,18 +345,18 @@ class _PetFormScreenState extends State<PetFormScreen> {
         _birthDate ?? DateTime.now().subtract(const Duration(days: 365));
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => Container(
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+      builder: (sheetContext) => Container(
+        color: CupertinoColors.systemBackground.resolveFrom(sheetContext),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             CupertinoButton(
                 child: const Text('取消'),
-                onPressed: () => Navigator.pop(context)),
+                onPressed: () => Navigator.pop(sheetContext)),
             CupertinoButton(
                 child: const Text('完成'),
                 onPressed: () {
                   setState(() => _birthDate = tempDate);
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                 }),
           ]),
           SizedBox(

@@ -1040,18 +1040,18 @@ class _EntrySheetState extends State<_EntrySheet> {
     DateTime tempDate = _selectedDate ?? DateTime.now();
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => Container(
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+      builder: (sheetContext) => Container(
+        color: CupertinoColors.systemBackground.resolveFrom(sheetContext),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             CupertinoButton(
                 child: const Text('取消'),
-                onPressed: () => Navigator.pop(context)),
+                onPressed: () => Navigator.pop(sheetContext)),
             CupertinoButton(
                 child: const Text('完成'),
                 onPressed: () {
                   setState(() => _selectedDate = tempDate);
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                 }),
           ]),
           SizedBox(

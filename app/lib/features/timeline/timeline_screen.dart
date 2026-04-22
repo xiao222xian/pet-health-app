@@ -158,20 +158,20 @@ class _TimelineScreenState extends State<TimelineScreen>
   void _showDeleteMenu(TimelineEvent event) {
     showCupertinoModalPopup(
         context: context,
-        builder: (_) => CupertinoActionSheet(
+        builder: (sheetContext) => CupertinoActionSheet(
               title: Text('删除「${event.title}」'),
               message: const Text('此操作无法撤销'),
               actions: [
                 CupertinoActionSheetAction(
                     isDestructiveAction: true,
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.of(sheetContext).pop();
                       _deleteEvent(event);
                     },
                     child: const Text('删除')),
               ],
               cancelButton: CupertinoActionSheetAction(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.of(sheetContext).pop(),
                   child: const Text('取消')),
             ));
   }

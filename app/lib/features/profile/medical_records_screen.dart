@@ -57,17 +57,17 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
   Future<void> _delete(MedicalRecord r) async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (_) => CupertinoAlertDialog(
+      builder: (ctx) => CupertinoAlertDialog(
         title: const Text('确认删除'),
         content: Text('删除「${r.title}」后无法恢复'),
         actions: [
           CupertinoDialogAction(
               isDestructiveAction: false,
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(ctx, false),
               child: const Text('取消')),
           CupertinoDialogAction(
               isDestructiveAction: true,
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(ctx, true),
               child: const Text('删除')),
         ],
       ),
@@ -518,13 +518,13 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
       if (mounted) {
         showCupertinoDialog(
             context: context,
-            builder: (_) => CupertinoAlertDialog(
+            builder: (ctx) => CupertinoAlertDialog(
                   title: const Text('保存失败'),
                   content: Text(e.toString()),
                   actions: [
                     CupertinoDialogAction(
                         child: const Text('确定'),
-                        onPressed: () => Navigator.pop(context))
+                        onPressed: () => Navigator.pop(ctx))
                   ],
                 ));
       }
@@ -539,13 +539,13 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
         : _date;
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => Container(
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+      builder: (sheetContext) => Container(
+        color: CupertinoColors.systemBackground.resolveFrom(sheetContext),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             CupertinoButton(
                 child: const Text('取消'),
-                onPressed: () => Navigator.pop(context)),
+                onPressed: () => Navigator.pop(sheetContext)),
             CupertinoButton(
                 child: const Text('完成'),
                 onPressed: () {
@@ -556,7 +556,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                       _date = tempDate;
                     }
                   });
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                 }),
           ]),
           SizedBox(

@@ -69,26 +69,26 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _pickAvatar() async {
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => CupertinoActionSheet(
+      builder: (sheetContext) => CupertinoActionSheet(
         title: const Text('更换头像'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               await _selectAvatar(ImageSource.gallery);
             },
             child: const Text('从相册选择'),
           ),
           CupertinoActionSheetAction(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               await _selectAvatar(ImageSource.camera);
             },
             child: const Text('拍照'),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(sheetContext),
           child: const Text('取消'),
         ),
       ),
@@ -118,13 +118,13 @@ class _AccountScreenState extends State<AccountScreen> {
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (_) => CupertinoAlertDialog(
+        builder: (ctx) => CupertinoAlertDialog(
           title: const Text('头像上传失败'),
           content: Text('头像保存失败，请重试。\n$e'),
           actions: [
             CupertinoDialogAction(
               child: const Text('确定'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
             ),
           ],
         ),
@@ -139,9 +139,9 @@ class _AccountScreenState extends State<AccountScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Padding(
+      builder: (sheetContext) => Padding(
         padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
             color: AppTheme.background,
@@ -195,7 +195,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   });
                   if (!mounted) return;
                   setState(() => _displayName = nextName);
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                   SupabaseService.notifyProfileChanged();
                 },
                 child: Container(
@@ -227,18 +227,18 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _deleteAccount() async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (_) => CupertinoAlertDialog(
+      builder: (ctx) => CupertinoAlertDialog(
         title: const Text('删除账号'),
         content: const Text('此操作不可恢复。删除后，你的账号和所有宠物数据将被永久清除。'),
         actions: [
           CupertinoDialogAction(
             isDestructiveAction: false,
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('取消'),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('确认删除'),
           ),
         ],
@@ -253,13 +253,13 @@ class _AccountScreenState extends State<AccountScreen> {
       if (!mounted) return;
       showCupertinoDialog(
         context: context,
-        builder: (_) => CupertinoAlertDialog(
+        builder: (ctx) => CupertinoAlertDialog(
           title: const Text('删除失败'),
           content: const Text('请稍后重试，或联系客服处理。'),
           actions: [
             CupertinoDialogAction(
               child: const Text('确定'),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
             ),
           ],
         ),
@@ -270,18 +270,18 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _signOut() async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (_) => CupertinoAlertDialog(
+      builder: (ctx) => CupertinoAlertDialog(
         title: const Text('退出登录'),
         content: const Text('确定要退出当前账号吗？'),
         actions: [
           CupertinoDialogAction(
             isDestructiveAction: false,
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('取消'),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('退出'),
           ),
         ],
