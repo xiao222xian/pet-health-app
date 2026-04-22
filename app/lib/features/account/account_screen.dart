@@ -334,13 +334,8 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           CustomScrollView(
             slivers: [
-              CupertinoSliverNavigationBar(
-                backgroundColor: Colors.transparent,
-                border: null,
-                largeTitle: const SizedBox.shrink(),
-              ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 60),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Center(
