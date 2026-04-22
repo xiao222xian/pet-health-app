@@ -58,7 +58,7 @@
 | 后端 | Node.js 20 + TypeScript | Express 框架，部署在 Railway |
 | 数据库 | Supabase (PostgreSQL 15) | Auth + DB + Storage 一体化，含 RLS 行级安全 |
 | 文件存储 | Supabase Storage | 宠物照片与头像，CDN 加速 |
-| AI | Anthropic Claude API | 问诊用 claude-haiku（低成本），营养建议用 claude-sonnet |
+| AI | OpenRouter API | 问诊与营养建议走 OpenRouter 兼容接口，可切换免费模型 |
 | CI/CD | GitHub Actions | 后端 + Flutter 双 workflow，push 自动触发 |
 
 ### 系统架构图
@@ -513,11 +513,16 @@ flutter test
 3. 在 **Variables** 面板添加以下环境变量：
 
 ```
-SUPABASE_URL            = https://xxx.supabase.co
+SUPABASE_URL              = https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY = eyJhb...（service role，非 anon key）
-ANTHROPIC_API_KEY       = sk-ant-...
-NODE_ENV                = production
-PORT                    = 3000
+OPENROUTER_API_KEY        = sk-or-v1-...
+OPENROUTER_MODEL          = openrouter/auto
+GROQ_API_KEY              = gsk_...
+GROQ_MODEL                = llama-3.1-8b-instant
+GEMINI_API_KEY            = AIza...
+GEMINI_MODEL              = gemini-flash-latest
+NODE_ENV                  = production
+PORT                      = 3000
 ```
 
 4. Build Command：`npm run build`

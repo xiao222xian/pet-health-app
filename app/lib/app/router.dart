@@ -15,7 +15,8 @@ import '../features/account/account_screen.dart';
 // Listenable that triggers GoRouter to re-evaluate redirects on auth state change
 class _GoRouterRefreshStream extends ChangeNotifier {
   _GoRouterRefreshStream() {
-    Supabase.instance.client.auth.onAuthStateChange.listen((_) => notifyListeners());
+    Supabase.instance.client.auth.onAuthStateChange
+        .listen((_) => notifyListeners());
   }
 }
 
@@ -47,7 +48,8 @@ final router = GoRouter(
           GoRoute(path: '/consult', builder: (_, __) => const ConsultScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/timeline', builder: (_, __) => const TimelineScreen()),
+          GoRoute(
+              path: '/timeline', builder: (_, __) => const TimelineScreen()),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
@@ -68,6 +70,11 @@ final router = GoRouter(
       path: '/timeline/new/:petId',
       builder: (_, state) =>
           EventFormScreen(petId: state.pathParameters['petId']!),
+    ),
+    GoRoute(
+      path: '/timeline/edit/:eventId',
+      builder: (_, state) =>
+          EventFormScreen(eventId: state.pathParameters['eventId']!),
     ),
   ],
 );

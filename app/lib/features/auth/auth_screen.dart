@@ -155,18 +155,14 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             Container(
                               width: 96, height: 96,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF6B5ECD), Color(0xFF9C88E8)],
-                                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                                ),
                                 shape: BoxShape.circle,
                                 boxShadow: [BoxShadow(
                                   color: const Color(0xFF6B5ECD).withOpacity(0.5),
                                   blurRadius: 32, offset: const Offset(0, 12))],
                               ),
-                              child: Center(child: Text('宠', style: TextStyle(
-                                fontSize: 42, fontWeight: FontWeight.w900,
-                                color: Colors.white, letterSpacing: -1)))),
+                              child: ClipOval(
+                                child: Image.asset('assets/logo.png',
+                                  width: 96, height: 96, fit: BoxFit.cover))),
                             const SizedBox(height: 20),
                             const Text('宠不病',
                               style: TextStyle(

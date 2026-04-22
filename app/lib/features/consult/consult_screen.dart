@@ -93,21 +93,37 @@ class _ConsultScreenState extends State<ConsultScreen> {
       return;
     }
     if (mounted) {
+      final petList = pets.cast<Map<String, dynamic>>();
+      Map<String, dynamic> activePet = petList.first;
+      if (_petId != null) {
+        for (final pet in petList) {
+          if (pet['id'] == _petId) {
+            activePet = pet;
+            break;
+          }
+        }
+      }
       setState(() {
-        _allPets = pets.cast<Map<String, dynamic>>();
-        _petId = pets[0]['id'] as String;
-        _petName = pets[0]['name'] as String?;
-        _petSpecies = pets[0]['species'] as String?;
+        _allPets = petList;
+        _petId = activePet['id'] as String;
+        _petName = activePet['name'] as String?;
+        _petSpecies = activePet['species'] as String?;
       });
     }
   }
 
-  void _selectPet(Map<String, dynamic> pet) {
-    Navigator.pop(context);
+  void _selectPet(BuildContext popupContext, Map<String, dynamic> pet) {
+    Navigator.pop(popupContext);
     setState(() {
       _petId = pet['id'] as String;
       _petName = pet['name'] as String?;
       _petSpecies = pet['species'] as String?;
+      _msgs.clear();
+      _pendingPhotos.clear();
+      _thinking = false;
+      _ended = false;
+      _finalAdvice = null;
+      _inputCtrl.clear();
     });
   }
 
@@ -115,7 +131,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
     if (_allPets.length <= 1) return;
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (_) => Container(
+      builder: (popupContext) => Container(
         color: CupertinoColors.systemBackground.resolveFrom(context),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -149,7 +165,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                     ? '🐶'
                     : '🐾';
             return GestureDetector(
-              onTap: () => _selectPet(p),
+              onTap: () => _selectPet(popupContext, p),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -625,11 +641,26 @@ class _ConsultScreenState extends State<ConsultScreen> {
   // ── Message list ──────────────────────────────────────
 
   Widget _buildMessageList() {
+    if (_msgs.isEmpty && !_thinking && _finalAdvice == null) {
+      return CustomScrollView(
+        controller: _scrollCtrl,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            sliver: SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildWelcome(),
+            ),
+          ),
+        ],
+      );
+    }
+
     return ListView(
       controller: _scrollCtrl,
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       children: [
-        if (_msgs.isEmpty && !_thinking) _buildWelcome(),
         ..._msgs.map((m) => m.isUser ? _buildUserBubble(m) : _buildAiBubble(m)),
         if (_thinking) const _ThinkingBubble(),
         if (_finalAdvice != null && !_thinking)
@@ -642,85 +673,165 @@ class _ConsultScreenState extends State<ConsultScreen> {
   // ── Welcome / empty state ─────────────────────────────
 
   Widget _buildWelcome() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          _AiAvatar(),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(4)),
-                  boxShadow: AppTheme.cardShadow),
-              child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) => ConstrainedBox(
+        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    ...AppTheme.cardShadow,
+                    BoxShadow(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        _petName != null
-                            ? 'Hi！我是「$_petName」的问诊助手 👋'
-                            : 'Hi！我是你的宠物问诊助手 👋',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.deepBlue)),
-                    const SizedBox(height: 6),
-                    Text('请描述宠物的症状，我会帮你分析。可以多次追问，问完了点「结束问诊」获取综合建议方案。',
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                            height: 1.5)),
-                  ]),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 18),
-        Text('你可以试着问我：',
-            style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _starters
-              .map((q) => GestureDetector(
-                    onTap: () {
-                      _inputCtrl.text = q;
-                      setState(() {});
-                    },
-                    child: Container(
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _AiAvatar(),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _petName != null
+                                      ? 'Hi！我是「$_petName」的问诊助手'
+                                      : 'Hi！我是你的宠物问诊助手',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.deepBlue,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '把症状、持续时间、食欲精神和排便情况告诉我，我会先帮你梳理风险，再给你下一步建议。',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                    height: 1.55,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]),
+                    const SizedBox(height: 14),
+                    Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                          horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: AppTheme.primary.withOpacity(0.3)),
-                          boxShadow: AppTheme.cardShadow),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        const Text('#',
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primarySoft.withOpacity(0.9),
+                            Colors.white,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(children: const [
+                        Icon(CupertinoIcons.sparkles,
+                            size: 15, color: AppTheme.primary),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '支持连续追问，也可以上传照片辅助判断。',
                             style: TextStyle(
-                                color: AppTheme.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800)),
-                        const SizedBox(width: 5),
-                        Text(q,
-                            style: const TextStyle(
-                                fontSize: 12, color: AppTheme.deepBlue)),
+                              fontSize: 12,
+                              color: AppTheme.deepBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ]),
                     ),
-                  ))
-              .toList(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '可以直接点一个示例开始',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _starters
+                    .map((q) => GestureDetector(
+                          onTap: () {
+                            _inputCtrl.text = q;
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: AppTheme.primary.withOpacity(0.18)),
+                              boxShadow: AppTheme.cardShadow,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primarySoft,
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      '#',
+                                      style: TextStyle(
+                                        color: AppTheme.primary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  q,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.deepBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ),
         ),
-      ]),
+      ),
     );
   }
 
