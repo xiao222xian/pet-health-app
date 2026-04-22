@@ -571,8 +571,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   }
 
   Widget _statCard(String emoji, String value, String label) => Container(
-        height: 80,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
