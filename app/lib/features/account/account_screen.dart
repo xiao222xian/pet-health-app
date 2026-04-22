@@ -335,7 +335,7 @@ class _AccountScreenState extends State<AccountScreen> {
           CustomScrollView(
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
+                padding: const EdgeInsets.fromLTRB(16, 72, 16, 60),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Center(
