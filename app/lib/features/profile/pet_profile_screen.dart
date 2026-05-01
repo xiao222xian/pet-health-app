@@ -547,7 +547,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       overdue.sort((a, b) => a.nextDueDate!.compareTo(b.nextDueDate!));
       return overdue.first;
     }
-    final upcoming = _upcomingRecords.where((record) => !_isOverdue(record)).toList();
+    final upcoming =
+        _upcomingRecords.where((record) => !_isOverdue(record)).toList();
     if (upcoming.isEmpty) return null;
     upcoming.sort((a, b) => a.nextDueDate!.compareTo(b.nextDueDate!));
     return upcoming.first;

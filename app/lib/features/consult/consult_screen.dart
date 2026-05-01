@@ -494,6 +494,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter)))),
         SafeArea(
+          bottom: false,
           child: Column(children: [
             _buildHeader(),
             Expanded(child: _buildMessageList()),
