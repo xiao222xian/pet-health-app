@@ -1,4 +1,4 @@
-# Pet Soul H5 mock → GitHub Pages（静态，免费，100+ 人够用）
+# Pet Soul H5 mock → gh-pages（与 Settings 里 Deploy from branch 兼容）
 name: Deploy Pet Soul H5
 
 on:
@@ -10,28 +10,21 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: petsoul-h5-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload mock site
-        uses: actions/upload-pages-artifact@v3
+      - name: Publish mock to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: petsoul_h5/mock
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: petsoul_h5/mock
+          commit_message: 'deploy: Pet Soul H5 mock'

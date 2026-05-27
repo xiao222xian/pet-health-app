@@ -28,9 +28,12 @@ git push origin main
 ### 2. 在 GitHub 开启 Pages
 
 1. 打开 https://github.com/xiao222xian/pet-health-app/settings/pages  
-2. **Build and deployment → Source** 选 **GitHub Actions**（不要选 Deploy from a branch）  
-3. 打开 **Actions** 页，运行 **Deploy Pet Soul H5**（或等 push 自动跑）  
-4. 绿勾后访问：
+2. **Build and deployment → Source** 选 **Deploy from a branch**  
+3. **Branch** 选 **`gh-pages`**，文件夹选 **`/ (root)`** → Save  
+4. 打开 **Actions** → **Deploy Pet Soul H5** → **Run workflow**  
+5. 绿勾后访问（约 1～2 分钟）：
+
+> 若你之前试过 **GitHub Actions** 作为 Source 且 workflow 报红，改回上面这套 **gh-pages 分支** 即可。
 
 ```
 https://xiao222xian.github.io/pet-health-app/
