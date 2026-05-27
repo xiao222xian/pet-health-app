@@ -1,0 +1,197 @@
+/* Pet Soul · 聊天 / 活动卡 共享样式 */
+.event-card {
+  max-width: 88%;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--ink);
+  background: var(--bg);
+  align-self: flex-end;
+}
+
+.event-card.them-card {
+  align-self: flex-start;
+  border-color: var(--line-strong);
+}
+
+.event-brand {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+
+.event-title {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.event-row {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+.event-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.45;
+}
+
+.event-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.event-actions button {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.event-actions .accept {
+  border: none;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 500;
+}
+
+.event-actions .alt {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+}
+
+.soul-banner {
+  align-self: center;
+  max-width: 92%;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.soul-banner-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.soul-banner-sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.confirmed-card {
+  align-self: center;
+  max-width: 92%;
+  text-align: center;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.confirmed-card .check {
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.tab-bar button {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink-3);
+  cursor: pointer;
+  position: relative;
+}
+
+.tab-bar button.is-active {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.tab-bar button.is-active::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink);
+}
+
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+
+.intent-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 8px;
+}
+
+.intent-opt {
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+.intent-opt:last-child { border-bottom: 1px solid var(--line); }
+
+.intent-opt button {
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.intent-opt button.selected {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.intent-opt .mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+}
+
+.intent-opt button.selected .mark {
+  background: var(--ink);
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 3px var(--bg);
+}

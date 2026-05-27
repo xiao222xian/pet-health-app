@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · Discover</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    .discover-top {
+      padding: calc(12px + var(--safe-top)) 20px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .pool-count {
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .empty-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .empty-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--ink-3);
+    }
+
+    .empty-title {
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .empty-desc {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.55;
+      max-width: 260px;
+    }
+
+    .empty-stat {
+      margin-top: 36px;
+      width: 100%;
+      max-width: 280px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .empty-stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 18px 0;
+      font-size: 14px;
+    }
+
+    .empty-stat-row span:last-child {
+      color: var(--ink-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty-footer {
+      padding: 24px;
+      padding-bottom: calc(24px + var(--safe-bottom));
+      width: 100%;
+      max-width: 430px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="discover-top">
+      <span class="eyebrow">Discover</span>
+      <span class="pool-count">0 隻在線</span>
+      <a class="icon-btn" href="me.html" aria-label="我的">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="3" height="3"/>
+        </svg>
+      </a>
+    </header>
+
+    <main class="empty-wrap">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <h1 class="empty-title">池子還在長大</h1>
+      <p class="empty-desc">現場越多人完成鑑定，這裡就會越多 WingPet 可以刷。你可以先完成測驗，或邀請朋友掃碼。</p>
+      <div class="empty-stat">
+        <div class="empty-stat-row">
+          <span>本場已完成</span>
+          <span>3</span>
+        </div>
+        <div class="empty-stat-row" style="border-top:1px solid var(--line)">
+          <span>預計 5 分鐘後</span>
+          <span>10+ 隻</span>
+        </div>
+      </div>
+    </main>
+
+    <footer class="empty-footer">
+      <a href="profile.html" class="btn-primary" style="text-decoration:none;display:flex">填寫基本信息 · 先入池</a>
+      <a href="quiz.html" class="btn-ghost" style="width:100%;margin-top:10px;text-decoration:none;display:flex">已完成建檔 · 去鑑定</a>
+      <button type="button" class="btn-ghost" style="width:100%;margin-top:10px" onclick="location.href='discover.html'">刷新池子</button>
+    </footer>
+  </div>
+</body>
+</html>

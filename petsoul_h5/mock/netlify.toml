@@ -1,0 +1,9 @@
+# Netlify 一键部署（把 mock 文件夹拖到 app.netlify.com/drop 也会读此配置）
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · Soul Match</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    .match-page {
+      min-height: 100dvh;
+      background: var(--bg-2);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 24px;
+      padding-bottom: calc(32px + var(--safe-bottom));
+    }
+
+    .match-sheet {
+      width: 100%;
+      max-width: 430px;
+      background: var(--bg);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 28px 22px 22px;
+    }
+
+    .match-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 16px 0 12px;
+    }
+
+    .match-row img {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius);
+      object-fit: cover;
+    }
+
+    .match-score {
+      font-size: 26px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .match-score span { font-size: 14px; color: var(--ink-3); font-weight: 400; }
+
+    .match-meta {
+      display: flex;
+      gap: 6px;
+      margin: 12px 0;
+    }
+
+    .match-block {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .match-block-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+    }
+
+    .match-block-text {
+      font-size: 13px;
+      color: var(--ink-2);
+      line-height: 1.45;
+    }
+
+    .match-sheet .btn-primary { margin-top: 20px; }
+    .match-sheet .btn-ghost { width: 100%; margin-top: 10px; }
+
+    .soul-tagline {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="match-page">
+    <div class="match-sheet">
+      <p class="eyebrow">Soul · 靈魂匹配成功</p>
+      <p class="soul-tagline">FetchaDate 雙向 ♥ · 同場 · 可立刻開聊</p>
+      <div class="match-row">
+        <img src="https://images.unsplash.com/photo-1619983081563-430f63602796?w=120&q=80" alt="">
+        <div>
+          <p class="match-score">87<span>%</span></p>
+          <p style="font-size:13px;color:var(--ink-3)">Bella · 柯基</p>
+        </div>
+      </div>
+      <div class="match-meta">
+        <span class="chip">同場 · 現場</span>
+        <span class="chip">遛狗搭子</span>
+      </div>
+      <p style="font-size:14px;color:var(--ink-2);line-height:1.5">Soul 規則：匹配成功 → 立刻開聊，不用等對方先發。</p>
+      <div class="match-block">
+        <p class="match-block-label">現場破冰</p>
+        <p class="match-block-text">灰色連帽衫 · 測驗區剛見過。</p>
+      </div>
+      <a href="chat.html?match=bella&new=1" class="btn-primary" style="text-decoration:none;display:flex">立刻開聊</a>
+      <a href="discover.html" class="btn-ghost" style="text-decoration:none;display:flex">繼續刷 Discover</a>
+    </div>
+  </div>
+</body>
+</html>

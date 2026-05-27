@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · 合频</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <style>
+    .page-top {
+      padding: calc(14px + var(--safe-top)) 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .page-title {
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .page-sub {
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    .match-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .match-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .match-item:active { background: var(--bg-2); }
+
+    .match-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .match-body { flex: 1; min-width: 0; }
+
+    .match-row1 {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .match-name { font-size: 15px; font-weight: 500; }
+
+    .match-score {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .match-row2 {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--ink-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .match-meta {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip-distance {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--bg-2);
+      color: var(--ink-2);
+    }
+
+    .chip-intent {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+    }
+
+    .unread {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--alert);
+      flex-shrink: 0;
+    }
+
+    .fav-item {
+      opacity: 0.85;
+    }
+
+    .fav-item .match-row2 { font-style: normal; color: var(--ink-4); }
+
+    .empty-hint {
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.5;
+    }
+
+    .list-hint {
+      padding: 12px 20px 4px;
+      font-size: 11px;
+      color: var(--ink-4);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="page-top">
+      <a class="page-back" href="discover.html" aria-label="返回">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div>
+        <p class="page-title">消息</p>
+        <p class="page-sub">FetchaDate Matches · Petch 約</p>
+      </div>
+    </header>
+
+    <nav class="tab-bar" id="tabs">
+      <button type="button" class="is-active" data-tab="matches">Matches</button>
+      <button type="button" data-tab="favd">Fav'd</button>
+    </nav>
+
+    <main class="match-list">
+      <div class="tab-panel is-active" id="panel-matches">
+        <p class="list-hint">雙向 ♥ · Soul 立刻開聊 · 同場優先</p>
+        <div id="matchItems"></div>
+      </div>
+      <div class="tab-panel" id="panel-favd">
+        <p class="list-hint">FetchaDate：单方面 Like，等对方回覆才解锁 IM</p>
+        <div id="favItems"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/match-engine.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/matches-data.js"></script>
+  <script>
+    const matches = Object.values(window.PETSOUL_MATCHES).map(window.PETSOUL_rescoreMatch);
+    const favs = Object.values(window.PETSOUL_FAVS).map(window.PETSOUL_rescoreMatch);
+
+    function renderMatch(m) {
+      return `
+        <a class="match-item" href="chat.html?match=${m.id}">
+          <img class="match-thumb" src="${m.img}" alt="">
+          <div class="match-body">
+            <div class="match-row1">
+              <span class="match-name">${m.name}</span>
+              <span class="match-score">${m.score}%</span>
+            </div>
+            <p class="match-row2">${m.preview}</p>
+            <div class="match-meta">
+              <span class="chip-distance">${m.distance}</span>
+              <span class="chip-intent">${m.intent}</span>
+            </div>
+          </div>
+          ${m.unread ? '<span class="unread"></span>' : ''}
+        </a>
+      `;
+    }
+
+    function renderFav(f) {
+      return `
+        <div class="match-item fav-item">
+          <img class="match-thumb" src="${f.img}" alt="">
+          <div class="match-body">
+            <div class="match-row1">
+              <span class="match-name">${f.name}</span>
+              <span class="match-score">${f.score}%</span>
+            </div>
+            <p class="match-row2">${f.preview}</p>
+            <div class="match-meta">
+              <span class="chip-distance">${f.distance}</span>
+              <span class="chip-intent">${f.intent}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('matchItems').innerHTML = matches.length
+      ? matches.map(renderMatch).join('')
+      : '<p class="empty-hint">还没有双向合频</p>';
+
+    document.getElementById('favItems').innerHTML = favs.length
+      ? favs.map(renderFav).join('')
+      : '<p class="empty-hint">暂无收藏</p>';
+
+    document.getElementById('tabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-tab]');
+      if (!btn) return;
+      document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('is-active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('is-active');
+    });
+
+    if (location.hash === '#favd') {
+      document.querySelector('[data-tab="favd"]').click();
+    }
+  </script>
+</body>
+</html>
