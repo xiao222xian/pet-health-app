@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · Discover</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    .discover-top {
+      padding: calc(10px + var(--safe-top)) 16px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .match-pill {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .stack-wrap {
+      flex: 1;
+      position: relative;
+      margin: 0 12px 4px;
+      min-height: 0;
+    }
+
+    .card-stack {
+      position: absolute;
+      inset: 0;
+    }
+
+    .wing-card {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      will-change: transform, opacity;
+      transition: transform 0.35s var(--ease-out), opacity 0.28s ease;
+    }
+
+    .wing-card.is-behind {
+      transform: scale(0.97) translateY(6px);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .wing-card.is-exit-left {
+      transform: translateX(-115%) rotate(-8deg);
+      opacity: 0;
+    }
+
+    .wing-card.is-exit-right {
+      transform: translateX(115%) rotate(8deg);
+      opacity: 0;
+    }
+
+    .card-surface {
+      position: absolute;
+      inset: 0;
+      bottom: 88px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      touch-action: pan-y;
+    }
+
+    .pet-hero {
+      flex: 1;
+      min-height: 0;
+      background: var(--bg-2);
+      position: relative;
+      touch-action: none;
+    }
+
+    .pet-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .hero-match {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-distance {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: var(--radius);
+      font-size: 11px;
+      color: var(--ink-2);
+    }
+
+    .intent-chip {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      font-size: 11px;
+      color: var(--ink);
+    }
+
+    .pet-meta {
+      padding: 14px 16px 12px;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+
+    .pet-name {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .pet-breed {
+      margin-top: 5px;
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+
+    .pet-why {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    .pet-tags {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .swipe-labels {
+      position: absolute;
+      top: 38%;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .swipe-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border: 2px solid var(--ink);
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.18s ease, transform 0.22s var(--ease-spring);
+    }
+
+    .swipe-label.pass {
+      border-color: var(--ink-3);
+      color: var(--ink-3);
+    }
+
+    .wing-card.show-like .swipe-label.like { opacity: 1; transform: scale(1); }
+    .wing-card.show-pass .swipe-label.pass { opacity: 1; transform: scale(1); }
+
+    /* FetchaDate bottom drawer — 真上滑 */
+    .clue-drawer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 220px;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+      border-radius: 14px 14px 0 0;
+      touch-action: none;
+      z-index: 3;
+      will-change: transform;
+    }
+
+    .clue-drawer-handle {
+      padding: 10px 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: grab;
+    }
+
+    .clue-drawer-handle:active {
+      cursor: grabbing;
+    }
+
+    .clue-drawer-bar {
+      width: 32px;
+      height: 3px;
+      background: var(--ink-4);
+      border-radius: 2px;
+    }
+
+    .clue-drawer-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .clue-drawer-body {
+      padding: 0 16px 12px;
+    }
+
+    .clue-quote {
+      font-size: 13px;
+      color: var(--ink-2);
+      line-height: 1.5;
+    }
+
+    .clue-quote em {
+      font-style: normal;
+      color: var(--ink-3);
+      font-size: 11px;
+    }
+
+    .owner-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px 14px;
+      border-top: 1px solid var(--line);
+      margin-top: 4px;
+    }
+
+    .owner-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s var(--ease-out);
+    }
+
+    .owner-avatar:active {
+      transform: scale(0.94);
+    }
+
+    .owner-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(10px);
+      transform: scale(1.15);
+      transition: filter 0.35s, transform 0.35s;
+    }
+
+    .owner-avatar.is-revealed img {
+      filter: blur(0);
+      transform: scale(1);
+    }
+
+    .owner-avatar .q-mark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 500;
+      background: rgba(245, 245, 247, 0.88);
+      transition: opacity 0.25s;
+    }
+
+    .owner-avatar.is-revealed .q-mark {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .owner-hint-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .owner-hint-sub {
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    .discover-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 52px;
+      padding: 6px 24px calc(16px + var(--safe-bottom));
+      flex-shrink: 0;
+    }
+
+    .action-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .action-circle.like {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .action-circle svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 20px;
+      padding-bottom: calc(28px + var(--safe-bottom));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s;
+      z-index: 100;
+    }
+
+    .overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .match-sheet {
+      width: 100%;
+      max-width: 430px;
+      background: var(--bg);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 28px 22px 22px;
+      transform: translateY(20px);
+      transition: transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .overlay.is-open .match-sheet {
+      transform: translateY(0);
+    }
+
+    .match-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .match-row img {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
+      object-fit: cover;
+    }
+
+    .match-score {
+      font-size: 26px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .match-score span {
+      font-size: 14px;
+      color: var(--ink-3);
+      font-weight: 400;
+    }
+
+    .match-ice {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .match-ice-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+    }
+
+    .match-ice-text {
+      font-size: 13px;
+      color: var(--ink-2);
+      line-height: 1.45;
+    }
+
+    .match-sheet .btn-primary {
+      margin-top: 18px;
+    }
+
+    .match-sheet .btn-ghost {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .match-breakdown {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .match-breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 5px 0;
+      color: var(--ink-2);
+    }
+
+    .match-breakdown-row span:last-child {
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+
+    .match-meta-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 12px 0 4px;
+    }
+
+    .top-link-wrap {
+      position: relative;
+    }
+
+    .match-ice-text {
+      white-space: pre-line;
+    }
+
+    .top-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--alert);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="discover-top">
+      <span class="eyebrow">Discover</span>
+      <span class="match-pill" id="poolCount">同場 · 12 隻</span>
+      <a class="icon-btn top-link-wrap" href="matches.html" aria-label="合频">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <span class="top-badge"></span>
+      </a>
+    </header>
+
+    <div class="stack-wrap">
+      <div class="card-stack" id="stack"></div>
+    </div>
+
+    <footer class="discover-actions">
+      <button type="button" class="action-circle" id="btnPass" aria-label="Pass">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <button type="button" class="action-circle like" id="btnLike" aria-label="Like">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </footer>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="match-sheet sheet">
+      <p class="eyebrow">Soul · 靈魂匹配成功</p>
+      <p style="font-size:12px;color:var(--ink-3);margin-top:4px;margin-bottom:4px">FetchaDate 雙向 ♥ · 同場 · 可立刻開聊</p>
+      <div class="match-row">
+        <img id="matchPetImg" src="" alt="">
+        <div>
+          <p class="match-score" id="matchScore">87<span>%</span></p>
+          <p style="font-size:13px;color:var(--ink-3);margin-top:2px" id="matchName">Bella</p>
+        </div>
+      </div>
+      <p style="font-size:14px;color:var(--ink-2);line-height:1.5" id="matchCopy"></p>
+      <div class="match-breakdown" id="matchBreakdown"></div>
+      <div class="match-meta-row" id="matchMeta"></div>
+      <div class="match-ice">
+        <p class="match-ice-label">現場破冰</p>
+        <p class="match-ice-text" id="matchIce"></p>
+      </div>
+      <a class="btn-primary" id="matchChat" href="chat.html?match=bella&new=1" style="text-decoration:none;display:flex">立刻開聊</a>
+      <button type="button" class="btn-ghost" id="matchClose">繼續刷 Discover</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlayPending">
+    <div class="match-sheet sheet">
+      <p class="eyebrow">Fav'd · 单方面 Like</p>
+      <p style="font-size:15px;font-weight:500;margin-top:8px" id="pendingName">Mochi</p>
+      <p style="font-size:13px;color:var(--ink-3);margin-top:8px;line-height:1.5">FetchaDate 規則：等對方也 ♥ 才解鎖 Matches 與聊天。已收入 Fav'd。</p>
+      <a href="matches.html#favd" class="btn-ghost" style="margin-top:16px;text-decoration:none;display:flex">查看 Fav'd</a>
+      <button type="button" class="btn-primary" id="pendingClose" style="margin-top:10px">繼續刷</button>
+    </div>
+  </div>
+
+  <script src="js/match-engine.js"></script>
+  <script src="js/profile.js"></script>
+  <script>
+    const userIntent = window.PetSoulProfile.getIntent();
+
+    const RAW_CARDS = [
+      {
+        id: 'bella', mutual: true,
+        name: 'Bella', breed: '柯基', persona: 'ENFP · 社交小太陽',
+        distance: '同場 · 現場', intent: '遛狗搭子',
+        tags: ['外向', '玩瘋'],
+        ownerSoul: { social: 0.88, bond: 0.75, play: 0.8, energy: 0.85 },
+        dogPlay: { social: 0.9, play: 0.82, energy: 0.88 },
+        ownerGender: '女', lookingFor: '不限',
+        img: 'https://images.unsplash.com/photo-1619983081563-430f63602796?w=800&q=80',
+        ownerImg: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
+        clue: 'Bella 說：我媽週末都在氹仔海濱，想找固定遛狗搭子。',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'B媽 · 28 · 設計系',
+        ice: '灰色連帽衫 · 測驗區剛見過。',
+      },
+      {
+        id: 'mochi', mutual: false,
+        name: 'Mochi', breed: '柴犬', persona: 'INTJ · 傲嬌貴族',
+        distance: '同場 · 120m', intent: '都可',
+        tags: ['慢熱', '忠犬'],
+        ownerSoul: { social: 0.35, bond: 0.55, play: 0.4, energy: 0.38 },
+        dogPlay: { social: 0.3, play: 0.45, energy: 0.35 },
+        ownerGender: '男', lookingFor: '不限',
+        img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80',
+        ownerImg: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+        clue: 'Mochi 說：我主人話少，但對狗友超真誠。傍晚才有空。',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: '阿 Ken · 31 · 工程師',
+        ice: '問「Mochi 今日肯唔肯畀摸？」',
+      },
+      {
+        id: 'lucky', mutual: true,
+        name: 'Lucky', breed: '黃金獵犬', persona: 'ESFJ · 治癒系',
+        distance: '同場 · 80m', intent: '都可',
+        tags: ['溫柔', '黏人'],
+        ownerSoul: { social: 0.72, bond: 0.85, play: 0.65, energy: 0.68 },
+        dogPlay: { social: 0.78, play: 0.7, energy: 0.72 },
+        ownerGender: '女', lookingFor: '不限',
+        img: 'https://images.unsplash.com/photo-1558787533-047468894a7f?w=800&q=80',
+        ownerImg: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
+        clue: 'Lucky 說：我媽愛慢跑，狗公園必到。',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'Cici · 26 · 護士',
+        ice: '手機殼有 Lucky 贴纸。',
+      },
+    ];
+
+    function enrichCard(raw) {
+      const user = window.PetSoulMatch.userProfile();
+      const m = window.PetSoulMatch.compute(user, raw);
+      return {
+        ...raw,
+        score: m.total,
+        ownerScore: m.ownerScore,
+        dogScore: m.dogScore,
+        why: m.whyLabel,
+        copy: m.copy,
+      };
+    }
+
+    const CARDS = RAW_CARDS
+      .filter((c) => window.PetSoulMatch.passesGenderFilter(window.PetSoulMatch.userProfile(), c))
+      .map(enrichCard);
+
+    const DRAWER_H = 220;
+    const PEEK_H = 88;
+    const HIDDEN = DRAWER_H - PEEK_H;
+
+    let index = 0;
+    const stackEl = document.getElementById('stack');
+    const overlay = document.getElementById('overlay');
+    const overlayPending = document.getElementById('overlayPending');
+    const poolCountEl = document.getElementById('poolCount');
+
+    function updatePoolLabel() {
+      poolCountEl.textContent = `同場 · ${Math.max(12 - index, 4)} 隻 · ${userIntent}`;
+    }
+
+    updatePoolLabel();
+
+    function cardHtml(data, idx) {
+      return `
+        <article class="wing-card ${idx === 1 ? 'is-behind' : ''}">
+          <div class="card-surface">
+            <div class="pet-hero">
+              <img src="${data.img}" alt="${data.name}" draggable="false">
+              <span class="hero-distance">${data.distance}</span>
+              <span class="hero-match">合頻 ${data.score}%</span>
+            </div>
+            <div class="pet-meta">
+              <h1 class="pet-name">${data.name}</h1>
+              <p class="pet-breed">${data.breed} · ${data.persona}</p>
+              <span class="intent-chip">${data.intent}</span>
+              <p class="pet-why">${data.why}</p>
+              <div class="pet-tags">${data.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
+            </div>
+            <div class="swipe-labels">
+              <span class="swipe-label pass">PASS</span>
+              <span class="swipe-label like">LIKE</span>
+            </div>
+          </div>
+          <div class="clue-drawer" style="transform:translateY(${HIDDEN}px)">
+            <div class="clue-drawer-handle">
+              <span class="clue-drawer-bar"></span>
+              <span class="clue-drawer-label">WingPet 線索 · 上滑</span>
+            </div>
+            <div class="clue-drawer-body">
+              <p class="clue-quote"><em>WingPet · </em>${data.clue}</p>
+            </div>
+            <div class="owner-row">
+              <div class="owner-avatar" aria-label="揭晓主人">
+                <img src="${data.ownerImg}" alt="">
+                <span class="q-mark">?</span>
+              </div>
+              <div>
+                <p class="owner-hint-title owner-hint-text">${data.ownerHint}</p>
+                <p class="owner-hint-sub">Fetch Who's Behind</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function setDrawerY(drawer, y, animate) {
+      drawer.style.transition = animate
+        ? 'transform 0.38s var(--ease-spring-soft)'
+        : 'none';
+      drawer.style.transform = `translateY(${y}px)`;
+      drawer.dataset.open = y < HIDDEN / 2 ? '1' : '0';
+    }
+
+    const SWIPE_COMMIT = 92;
+    const VELOCITY_COMMIT = 0.42;
+    const DRAG_CAP = 132;
+
+    function dampedDrag(x) {
+      const abs = Math.abs(x);
+      const sign = x < 0 ? -1 : 1;
+      if (abs <= DRAG_CAP) return x;
+      return sign * (DRAG_CAP + (abs - DRAG_CAP) * 0.2);
+    }
+
+    function applyCardDrag(card, x) {
+      const dx = dampedDrag(x);
+      const rot = dx * 0.042;
+      const fade = 1 - Math.min(Math.abs(dx) / 480, 0.14);
+      card.style.transform = `translateX(${dx}px) rotate(${rot}deg)`;
+      card.style.opacity = String(fade);
+      card.classList.toggle('show-like', dx > 34);
+      card.classList.toggle('show-pass', dx < -34);
+    }
+
+    function springBack(card) {
+      card.classList.remove('is-dragging');
+      card.classList.add('is-spring-back');
+      card.style.transform = '';
+      card.style.opacity = '';
+      card.classList.remove('show-like', 'show-pass');
+      window.setTimeout(() => card.classList.remove('is-spring-back'), 480);
+    }
+
+    function bindDrawer(card) {
+      const drawer = card.querySelector('.clue-drawer');
+      let startY = 0, startOffset = HIDDEN, dragging = false, offset = HIDDEN;
+
+      const onDown = (e) => {
+        if (e.target.closest('.owner-avatar')) return;
+        dragging = true;
+        startY = e.clientY;
+        startOffset = offset;
+        drawer.setPointerCapture(e.pointerId);
+        drawer.style.transition = 'none';
+      };
+
+      const onMove = (e) => {
+        if (!dragging) return;
+        e.preventDefault();
+        const dy = e.clientY - startY;
+        offset = Math.max(0, Math.min(HIDDEN, startOffset + dy));
+        drawer.style.transform = `translateY(${offset}px)`;
+      };
+
+      const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        offset = offset < HIDDEN / 2 ? 0 : HIDDEN;
+        setDrawerY(drawer, offset, true);
+      };
+
+      drawer.addEventListener('pointerdown', onDown);
+      drawer.addEventListener('pointermove', onMove);
+      drawer.addEventListener('pointerup', onUp);
+      drawer.addEventListener('pointercancel', onUp);
+    }
+
+    function bindOwnerReveal(card, data) {
+      const avatar = card.querySelector('.owner-avatar');
+      const hint = card.querySelector('.owner-hint-text');
+      avatar.addEventListener('click', () => {
+        avatar.classList.add('is-revealed');
+        hint.textContent = data.ownerRevealed;
+      });
+    }
+
+    function bindHorizontalSwipe(card) {
+      const surface = card.querySelector('.card-surface');
+      let startX = 0, startY = 0, currentX = 0, mode = null, dragging = false;
+      let lastX = 0, lastT = 0, velocity = 0;
+
+      const onDown = (e) => {
+        if (e.target.closest('.owner-avatar')) return;
+        dragging = true;
+        mode = null;
+        startX = e.clientX;
+        startY = e.clientY;
+        currentX = 0;
+        lastX = 0;
+        lastT = performance.now();
+        velocity = 0;
+        card.classList.add('is-dragging');
+        card.classList.remove('is-spring-back');
+        surface.setPointerCapture(e.pointerId);
+        card.style.transition = 'none';
+      };
+
+      const onMove = (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const now = performance.now();
+
+        if (!mode && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+          mode = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+          if (mode === 'v') {
+            dragging = false;
+            card.classList.remove('is-dragging');
+            return;
+          }
+        }
+
+        if (mode !== 'h') return;
+        e.preventDefault();
+        const dt = Math.max(now - lastT, 8);
+        velocity = (dx - lastX) / dt;
+        lastX = dx;
+        lastT = now;
+        currentX = dx;
+        applyCardDrag(card, currentX);
+      };
+
+      const onUp = () => {
+        if (!dragging || mode !== 'h') return;
+        dragging = false;
+        card.classList.remove('is-dragging');
+
+        const flingRight = velocity > VELOCITY_COMMIT;
+        const flingLeft = velocity < -VELOCITY_COMMIT;
+        if (currentX > SWIPE_COMMIT || flingRight) dismiss('right', true);
+        else if (currentX < -SWIPE_COMMIT || flingLeft) dismiss('left', false);
+        else springBack(card);
+      };
+
+      surface.addEventListener('pointerdown', onDown);
+      surface.addEventListener('pointermove', onMove);
+      surface.addEventListener('pointerup', onUp);
+      surface.addEventListener('pointercancel', onUp);
+    }
+
+    function bindCard(card) {
+      bindDrawer(card);
+      bindOwnerReveal(card, CARDS[index]);
+      bindHorizontalSwipe(card);
+    }
+
+    function renderStack() {
+      if (index >= CARDS.length) {
+        setTimeout(() => { location.href = 'discover-empty.html'; }, 400);
+        return;
+      }
+      stackEl.innerHTML = CARDS.slice(index, index + 2).map((c, i) => cardHtml(c, i)).join('');
+      const top = stackEl.querySelector('.wing-card');
+      if (top) bindCard(top);
+    }
+
+    function dismiss(direction, liked) {
+      const top = stackEl.querySelector('.wing-card');
+      if (!top) return;
+      const data = CARDS[index];
+      top.classList.remove('is-dragging', 'is-spring-back');
+      top.style.transition = '';
+      top.classList.add(direction === 'right' ? 'is-exit-right' : 'is-exit-left');
+      setTimeout(() => {
+        index += 1;
+        updatePoolLabel();
+        if (liked) {
+          if (data.mutual) showMatch(data);
+          else showPending(data);
+        } else renderStack();
+      }, 300);
+    }
+
+    function nudgeSwipe(liked) {
+      const top = stackEl.querySelector('.wing-card');
+      if (!top) return;
+      top.classList.add('is-dragging');
+      applyCardDrag(top, liked ? 110 : -110);
+      setTimeout(() => dismiss(liked ? 'right' : 'left', liked), 140);
+    }
+
+    function showMatch(data) {
+      document.getElementById('matchPetImg').src = data.img;
+      document.getElementById('matchScore').innerHTML = `${data.score}<span>%</span>`;
+      document.getElementById('matchName').textContent = `${data.name} · ${data.breed}`;
+      document.getElementById('matchCopy').textContent = data.copy;
+      document.getElementById('matchBreakdown').innerHTML = `
+        <p class="match-ice-label" style="margin-bottom:6px">合頻拆解 · 55% Soul + 35% 狗玩伴</p>
+        <div class="match-breakdown-row"><span>主人 Soul</span><span>${data.ownerScore}%</span></div>
+        <div class="match-breakdown-row"><span>狗玩伴</span><span>${data.dogScore}%</span></div>
+      `;
+      document.getElementById('matchIce').textContent = window.PetSoulProfile.iceHintForMatch(data.ice);
+      document.getElementById('matchMeta').innerHTML = `
+        <span class="chip">${data.distance}</span>
+        <span class="chip">${data.intent}</span>
+        <span class="chip">你的意圖 · ${userIntent}</span>
+      `;
+      document.getElementById('matchChat').href = `chat.html?match=${data.id}&new=1`;
+      overlay.classList.add('is-open');
+    }
+
+    function showPending(data) {
+      document.getElementById('pendingName').textContent = data.name;
+      overlayPending.classList.add('is-open');
+    }
+
+    document.getElementById('matchClose').addEventListener('click', () => {
+      overlay.classList.remove('is-open');
+      renderStack();
+    });
+    document.getElementById('pendingClose').addEventListener('click', () => {
+      overlayPending.classList.remove('is-open');
+      renderStack();
+    });
+    document.getElementById('btnPass').addEventListener('click', () => nudgeSwipe(false));
+    document.getElementById('btnLike').addEventListener('click', () => nudgeSwipe(true));
+
+    updatePoolLabel();
+    renderStack();
+  </script>
+</body>
+</html>

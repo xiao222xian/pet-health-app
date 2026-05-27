@@ -1,0 +1,111 @@
+/* Pet Soul · 动效 token + 通用 motion */
+
+:root {
+  --ease-out: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --dur-fast: 0.2s;
+  --dur-med: 0.36s;
+  --dur-slow: 0.5s;
+  --space-section: 28px;
+  --space-field: 24px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.04); opacity: 0.92; }
+}
+
+@keyframes entryFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes sectionFlash {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp var(--dur-med) var(--ease-out) both;
+}
+
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+
+.panel-swap-enter {
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+.q-section.is-new {
+  animation: sectionFlash 0.5s var(--ease-out) both;
+}
+
+.q-opt.is-stagger {
+  animation: fadeUp 0.38s var(--ease-out) both;
+}
+
+.analyze-core.is-pulse {
+  animation: pulseSoft 1.6s var(--ease-out) infinite;
+}
+
+.entry-mark.is-float {
+  animation: entryFloat 4s ease-in-out infinite;
+}
+
+.action-circle:active {
+  transform: scale(0.94);
+}
+
+.action-circle {
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) ease,
+              border-color var(--dur-fast) ease;
+}
+
+.wing-card.is-spring-back {
+  transition: transform 0.48s var(--ease-spring-soft),
+              opacity 0.32s var(--ease-out) !important;
+}
+
+.wing-card.is-dragging {
+  transition: none !important;
+}
+
+.photo-tap:active {
+  opacity: 0.92;
+}
+
+.q-opt button:active:not(.is-picked) {
+  background: var(--bg-2);
+}
+
+.overlay .match-sheet,
+.overlay .sheet {
+  animation: scaleIn 0.38s var(--ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · 填写基本信息</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    .setup {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: calc(20px + var(--safe-top)) 24px calc(20px + var(--safe-bottom));
+    }
+
+    .setup-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .setup-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .setup-step {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .setup-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .setup-title {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .setup-sub {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.5;
+    }
+
+    .photo-tap {
+      margin-top: 28px;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      max-height: 280px;
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      border: 1px dashed var(--line-strong);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-tap.has-img {
+      border-style: solid;
+      border-color: var(--line);
+    }
+
+    .photo-tap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .photo-tap-label {
+      font-size: 13px;
+      color: var(--ink-3);
+      z-index: 1;
+    }
+
+    .photo-tap.has-img .photo-tap-label { display: none; }
+
+    .photo-tap svg {
+      width: 28px;
+      height: 28px;
+      color: var(--ink-3);
+      z-index: 1;
+    }
+
+    .photo-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--ink-4);
+    }
+
+    .field {
+      margin-top: var(--space-field);
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 8px;
+    }
+
+    .field-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    .breed-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .breed-chip {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .breed-chip.is-active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .clue-input {
+      width: 100%;
+      min-height: 96px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+      resize: vertical;
+    }
+
+    .owner-photo {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .owner-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      border: 1px dashed var(--line-strong);
+    }
+
+    .owner-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .owner-thumb {
+      position: relative;
+    }
+
+    .owner-thumb.blur img {
+      filter: blur(8px);
+      transform: scale(1.1);
+    }
+
+    .owner-copy {
+      flex: 1;
+      font-size: 12px;
+      color: var(--ink-3);
+      line-height: 1.45;
+    }
+
+    .section-divider {
+      margin: 28px 0 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+    }
+
+    .age-row, .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .age-row button, .tag-row button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .age-row button.is-active, .tag-row button.is-active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .clue-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .clue-chips button {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--ink-3);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .owner-upload-row {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .preview-card {
+      margin-top: 24px;
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--bg-2);
+    }
+
+    .preview-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 12px;
+    }
+
+    .preview-clue {
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.45;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .preview-clue em {
+      font-style: normal;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .preview-owner {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .preview-owner-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      background: var(--bg);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      border: 1px solid var(--line-strong);
+    }
+
+    .preview-owner-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-owner-avatar.is-blur img {
+      filter: blur(8px);
+      transform: scale(1.08);
+    }
+
+    .preview-owner-avatar .q {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      background: rgba(245,245,247,0.5);
+    }
+
+    .preview-owner-avatar.is-revealed .q { display: none; }
+
+    .preview-owner-text {
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+
+    .preview-owner-sub {
+      font-size: 10px;
+      color: var(--ink-4);
+      margin-top: 2px;
+    }
+
+    .panel { display: none; }
+    .panel.is-active { display: block; }
+    .panel.is-active.panel-swap-enter { display: block; }
+
+    .setup-footer {
+      padding-top: var(--space-section);
+      flex-shrink: 0;
+    }
+
+    .setup-footer .btn-ghost {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="setup">
+      <header class="setup-top">
+        <a class="setup-back" href="entry.html" id="backBtn" aria-label="返回">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </a>
+        <span class="setup-step" id="stepLabel">1 / 2</span>
+      </header>
+
+      <div class="setup-body">
+        <section class="panel is-active" id="panel1">
+          <p class="eyebrow">Step 1 · 基本信息</p>
+          <h1 class="setup-title">填写基本信息</h1>
+          <p class="setup-sub">上传宠物照片、名字和品种。测验前先建好 WingPet，别人刷 Discover 才认得出。</p>
+
+          <label class="photo-tap" id="petPhotoTap">
+            <input type="file" id="petPhotoInput" accept="image/*" capture="environment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 16V8m0 0l-3 3m3-3l3 3"/>
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+            </svg>
+            <span class="photo-tap-label">點擊上傳寵物照片</span>
+          </label>
+          <p class="photo-hint">建議：光線充足 · 正脸 · 單隻狗 · 現場可即拍</p>
+
+          <div class="field">
+            <p class="field-label">名字</p>
+            <input type="text" class="field-input" id="petName" placeholder="例如：豆包" maxlength="12" value="豆包">
+          </div>
+
+          <div class="field">
+            <p class="field-label">品種</p>
+            <div class="breed-row" id="breedRow">
+              <button type="button" class="breed-chip is-active" data-breed="柯基">柯基</button>
+              <button type="button" class="breed-chip" data-breed="柴犬">柴犬</button>
+              <button type="button" class="breed-chip" data-breed="黃金獵犬">黃金獵犬</button>
+              <button type="button" class="breed-chip" data-breed="混種">混種</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel2">
+          <p class="eyebrow">Step 2 · 主人信息</p>
+          <h1 class="setup-title">Fetch Who's Behind</h1>
+          <p class="setup-sub">FetchaDate：宠先、主人后置 · 照片默认模糊，点 ? 才揭晓。Petch：常去哪遛、现场怎么认你。</p>
+
+          <div class="section-divider" style="margin-top:20px;padding-top:0;border-top:none">
+            <p class="section-tag">FetchaDate · 揭晓后显示</p>
+          </div>
+
+          <div class="field" style="margin-top:12px">
+            <p class="field-label">主人称呼</p>
+            <input type="text" class="field-input" id="ownerNickname" placeholder="例如：豆包妈 / B妈" maxlength="16" value="豆包妈">
+          </div>
+
+          <div class="field">
+            <p class="field-label">年龄</p>
+            <div class="age-row" id="ageRow">
+              <button type="button" data-age="20s">20+</button>
+              <button type="button" data-age="25" class="is-active">25</button>
+              <button type="button" data-age="28">28</button>
+              <button type="button" data-age="30s">30+</button>
+              <button type="button" data-age="35">35+</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <p class="field-label">我的性别（可选 · 交友向时用）</p>
+            <div class="age-row" id="genderRow">
+              <button type="button" data-gender="女">女</button>
+              <button type="button" data-gender="男">男</button>
+              <button type="button" data-gender="" class="is-active">不透露</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <p class="field-label">一句标签</p>
+            <div class="tag-row" id="tagRow">
+              <button type="button" data-tag="設計系" class="is-active">設計系</button>
+              <button type="button" data-tag="工程師">工程師</button>
+              <button type="button" data-tag="護士">護士</button>
+              <button type="button" data-tag="自由業">自由業</button>
+            </div>
+            <input type="text" class="field-input" id="ownerTagCustom" placeholder="或自定义，如：夜遛党" style="margin-top:10px">
+          </div>
+
+          <div class="field">
+            <p class="field-label">WingPet 线索 · 宠口吻</p>
+            <textarea class="clue-input" id="ownerClue" rows="3">豆包说：我妈周末都在氹仔海滨，想找固定遛狗搭子。</textarea>
+            <div class="clue-chips" id="clueChips">
+              <button type="button" data-clue="周末都在氹仔海滨，想找固定遛狗搭子">固定遛狗搭子</button>
+              <button type="button" data-clue="话少但对狗友很真诚，傍晚才有空">傍晚才有空</button>
+              <button type="button" data-clue="爱慢跑，狗公园必到">狗公园必到</button>
+            </div>
+          </div>
+
+          <div class="owner-upload-row">
+            <div class="owner-thumb blur" id="ownerPhotoTap">
+              <span id="ownerPlaceholder" style="font-size:10px;color:var(--ink-4)">?</span>
+              <img id="ownerPreview" alt="" style="display:none">
+            </div>
+            <label class="owner-copy" for="ownerPhotoInput">
+              主人照片<br>
+              <span style="color:var(--ink-2)">Discover 默认模糊 · 点 ? 揭晓</span><br>
+              <span style="text-decoration:underline;color:var(--ink-2)">点击上传</span>
+            </label>
+            <input type="file" id="ownerPhotoInput" accept="image/*" capture="user">
+          </div>
+
+          <div class="section-divider">
+            <p class="section-tag">Petch · 玩伴信息</p>
+          </div>
+
+          <div class="field" style="margin-top:12px">
+            <p class="field-label">常遛狗区域</p>
+            <input type="text" class="field-input" id="playArea" placeholder="例如：氹仔海滨 · 同场" value="氹仔海滨 · 同场">
+          </div>
+
+          <div class="field">
+            <p class="field-label">现场破冰 · Match 后提示</p>
+            <input type="text" class="field-input" id="iceHint" placeholder="例如：灰色连帽衫 · 测验区刚见过" value="灰色连帽衫 · 测验区刚见过">
+            <p class="photo-hint">别人双向 Match 后弹层会显示，方便现场认人</p>
+          </div>
+
+          <div class="preview-card">
+            <p class="preview-label">Discover 预览 · 别人上滑看到</p>
+            <p class="preview-clue" id="previewClue"><em>WingPet · </em>豆包说：…</p>
+            <div class="preview-owner" id="previewOwnerTap" title="点击模拟 ? 揭晓">
+              <div class="preview-owner-avatar is-blur" id="previewAvatar">
+                <img id="previewOwnerImg" src="" alt="" style="display:none">
+                <span class="q">?</span>
+              </div>
+              <div>
+                <p class="preview-owner-text" id="previewOwnerText">点 ? 揭晓主人</p>
+                <p class="preview-owner-sub">Fetch Who's Behind</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="setup-footer">
+        <button type="button" class="btn-primary" id="nextBtn">下一步</button>
+        <button type="button" class="btn-ghost" id="skipOwnerBtn" style="display:none">跳過，直接鑑定</button>
+      </footer>
+    </main>
+  </div>
+
+  <script src="js/profile.js"></script>
+  <script>
+    const DEFAULT_PET_IMG = 'https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=600&q=80';
+    const DEFAULT_OWNER_IMG = 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80';
+    let step = 1;
+    let breed = '柯基';
+    let petPhoto = DEFAULT_PET_IMG;
+    let ownerPhoto = DEFAULT_OWNER_IMG;
+    let ownerAge = '25';
+    let ownerGender = '';
+    let ownerTag = '設計系';
+    let previewRevealed = false;
+
+    const panel1 = document.getElementById('panel1');
+    const panel2 = document.getElementById('panel2');
+    const nextBtn = document.getElementById('nextBtn');
+    const skipOwnerBtn = document.getElementById('skipOwnerBtn');
+    const petPhotoTap = document.getElementById('petPhotoTap');
+
+    function petNameVal() {
+      return document.getElementById('petName').value.trim() || '豆包';
+    }
+
+    function clueText() {
+      return document.getElementById('ownerClue').value.trim();
+    }
+
+    function ownerRevealedLine() {
+      const nick = document.getElementById('ownerNickname').value.trim() || '豆包妈';
+      const tag = document.getElementById('ownerTagCustom').value.trim() || ownerTag;
+      return `${nick} · ${ownerAge} · ${tag}`;
+    }
+
+    function updatePreview() {
+      const clue = window.PetSoulProfile.formatClue(petNameVal(), clueText());
+      document.getElementById('previewClue').innerHTML = `<em>WingPet · </em>${clue}`;
+      const img = document.getElementById('previewOwnerImg');
+      if (ownerPhoto) {
+        img.src = ownerPhoto;
+        img.style.display = 'block';
+      }
+      const avatar = document.getElementById('previewAvatar');
+      avatar.classList.toggle('is-blur', !previewRevealed);
+      avatar.classList.toggle('is-revealed', previewRevealed);
+      document.getElementById('previewOwnerText').textContent = previewRevealed
+        ? ownerRevealedLine()
+        : '点 ? 揭晓主人';
+    }
+
+    const saved = window.PetSoulProfile.load();
+    if (saved) {
+      document.getElementById('petName').value = saved.petName || '豆包';
+      breed = saved.breed || '柯基';
+      document.querySelectorAll('.breed-chip').forEach(c => {
+        c.classList.toggle('is-active', c.dataset.breed === breed);
+      });
+      if (saved.petPhoto) setPetPreview(saved.petPhoto);
+      if (saved.ownerNickname) document.getElementById('ownerNickname').value = saved.ownerNickname;
+      if (saved.ownerAge) {
+        ownerAge = saved.ownerAge;
+        document.querySelectorAll('#ageRow button').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.age === ownerAge);
+        });
+      }
+      if (saved.ownerGender !== undefined) {
+        ownerGender = saved.ownerGender || '';
+        document.querySelectorAll('#genderRow button').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.gender === ownerGender);
+        });
+      }
+      if (saved.ownerTag) {
+        ownerTag = saved.ownerTag;
+        document.querySelectorAll('#tagRow button').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.tag === ownerTag);
+        });
+      }
+      if (saved.ownerClue) document.getElementById('ownerClue').value = saved.ownerClue;
+      if (saved.playArea) document.getElementById('playArea').value = saved.playArea;
+      if (saved.iceHint) document.getElementById('iceHint').value = saved.iceHint;
+      if (saved.ownerPhoto) setOwnerPreview(saved.ownerPhoto);
+    } else {
+      setPetPreview(DEFAULT_PET_IMG);
+      setOwnerPreview(DEFAULT_OWNER_IMG);
+    }
+
+    document.getElementById('breedRow').addEventListener('click', (e) => {
+      const chip = e.target.closest('.breed-chip');
+      if (!chip) return;
+      breed = chip.dataset.breed;
+      document.querySelectorAll('.breed-chip').forEach(c => c.classList.remove('is-active'));
+      chip.classList.add('is-active');
+    });
+
+    document.getElementById('ageRow').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-age]');
+      if (!btn) return;
+      ownerAge = btn.dataset.age;
+      document.querySelectorAll('#ageRow button').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      updatePreview();
+    });
+
+    document.getElementById('genderRow').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-gender]');
+      if (!btn) return;
+      ownerGender = btn.dataset.gender;
+      document.querySelectorAll('#genderRow button').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+
+    document.getElementById('tagRow').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-tag]');
+      if (!btn) return;
+      ownerTag = btn.dataset.tag;
+      document.getElementById('ownerTagCustom').value = '';
+      document.querySelectorAll('#tagRow button').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      updatePreview();
+    });
+
+    document.getElementById('clueChips').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-clue]');
+      if (!btn) return;
+      const name = petNameVal();
+      document.getElementById('ownerClue').value = `${name}说：${btn.dataset.clue}`;
+      updatePreview();
+    });
+
+    ['ownerNickname', 'ownerClue', 'ownerTagCustom', 'playArea', 'iceHint', 'petName'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updatePreview);
+    });
+
+    document.getElementById('previewOwnerTap').addEventListener('click', () => {
+      previewRevealed = !previewRevealed;
+      updatePreview();
+    });
+
+    function setPetPreview(src) {
+      petPhoto = src;
+      petPhotoTap.classList.add('has-img');
+      let img = petPhotoTap.querySelector('img');
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = '';
+        petPhotoTap.appendChild(img);
+      }
+      img.src = src;
+    }
+
+    function setOwnerPreview(src) {
+      ownerPhoto = src;
+      const img = document.getElementById('ownerPreview');
+      const ph = document.getElementById('ownerPlaceholder');
+      img.src = src;
+      img.style.display = 'block';
+      ph.style.display = 'none';
+      updatePreview();
+    }
+
+    document.getElementById('ownerPhotoTap').addEventListener('click', () => {
+      document.getElementById('ownerPhotoInput').click();
+    });
+
+    function readFile(input, cb) {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => cb(reader.result);
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('petPhotoInput').addEventListener('change', (e) => {
+      readFile(e.target, setPetPreview);
+    });
+
+    document.getElementById('ownerPhotoInput').addEventListener('change', (e) => {
+      readFile(e.target, setOwnerPreview);
+    });
+
+    function saveProfile() {
+      const tag = document.getElementById('ownerTagCustom').value.trim() || ownerTag;
+      window.PetSoulProfile.save({
+        petName: petNameVal(),
+        breed,
+        petPhoto,
+        ownerNickname: document.getElementById('ownerNickname').value.trim(),
+        ownerAge,
+        ownerGender,
+        ownerTag: tag,
+        ownerClue: window.PetSoulProfile.formatClue(petNameVal(), clueText()),
+        ownerPhoto,
+        ownerRevealed: ownerRevealedLine(),
+        playArea: document.getElementById('playArea').value.trim(),
+        iceHint: document.getElementById('iceHint').value.trim(),
+      });
+    }
+
+    function goQuiz() {
+      saveProfile();
+      location.href = 'quiz.html';
+    }
+
+    updatePreview();
+
+    nextBtn.addEventListener('click', () => {
+      if (step === 1) {
+        if (!petNameVal()) {
+          document.getElementById('petName').focus();
+          return;
+        }
+        step = 2;
+        panel1.classList.remove('is-active');
+        panel2.classList.add('is-active', 'panel-swap-enter');
+        document.getElementById('stepLabel').textContent = '2 / 2';
+        nextBtn.textContent = '開始靈魂鑑定';
+        skipOwnerBtn.style.display = 'flex';
+        previewRevealed = false;
+        updatePreview();
+        document.getElementById('backBtn').href = '#';
+        document.getElementById('backBtn').onclick = (e) => {
+          e.preventDefault();
+          step = 1;
+          panel2.classList.remove('is-active');
+          panel1.classList.add('is-active');
+          document.getElementById('stepLabel').textContent = '1 / 2';
+          nextBtn.textContent = '下一步';
+          skipOwnerBtn.style.display = 'none';
+          document.getElementById('backBtn').href = 'entry.html';
+          document.getElementById('backBtn').onclick = null;
+        };
+        return;
+      }
+      goQuiz();
+    });
+
+    skipOwnerBtn.addEventListener('click', goQuiz);
+  </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · 聊天</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <style>
+    .chat-top {
+      padding: calc(10px + var(--safe-top)) 12px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+
+    .chat-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .chat-peer {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .chat-peer img {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius);
+      object-fit: cover;
+    }
+
+    .chat-peer-name {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .chat-peer-meta {
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-top: 1px;
+    }
+
+    .chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .bubble.them {
+      align-self: flex-start;
+      background: var(--bg-2);
+      color: var(--ink-2);
+    }
+
+    .bubble.me {
+      align-self: flex-end;
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .bubble-time {
+      font-size: 10px;
+      color: var(--ink-4);
+      margin-top: 4px;
+    }
+
+    .bubble.me .bubble-time { color: rgba(255,255,255,0.55); }
+
+    .chat-compose {
+      padding: 10px 16px calc(12px + var(--safe-bottom));
+      border-top: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+
+    .template-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+
+    .template-row::-webkit-scrollbar { display: none; }
+
+    .template-chip {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--ink);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .template-chip.primary {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .template-hint {
+      font-size: 10px;
+      color: var(--ink-4);
+      margin: -4px 0 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .send-btn {
+      height: 40px;
+      padding: 0 16px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: var(--bg);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="chat-top">
+      <a class="chat-back" href="matches.html" aria-label="返回">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div class="chat-peer" id="chatPeer"></div>
+    </header>
+
+    <main class="chat-thread" id="thread"></main>
+
+    <footer class="chat-compose">
+      <p class="template-hint">Petch 約 playdate · FetchaDate 約見面</p>
+      <div class="template-row">
+        <button type="button" class="template-chip primary" data-template="playdate">🐾 約遛狗</button>
+        <button type="button" class="template-chip" data-template="date">☕ 約見面</button>
+      </div>
+      <div class="input-row">
+        <input type="text" class="chat-input" id="input" placeholder="立刻開聊…" autocomplete="off">
+        <button type="button" class="send-btn" id="sendBtn">發送</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="js/match-engine.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/matches-data.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const matchId = params.get('match') || 'bella';
+    const isNew = params.get('new') === '1';
+    const raw = window.PETSOUL_MATCHES[matchId] || window.PETSOUL_MATCHES.bella;
+    const match = window.PETSOUL_rescoreMatch(raw);
+    const templates = window.PETSOUL_TEMPLATES;
+
+    document.title = `Pet Soul · ${match.name}`;
+    document.getElementById('chatPeer').innerHTML = `
+      <img src="${match.img}" alt="">
+      <div>
+        <p class="chat-peer-name">${match.name} · ${match.owner}</p>
+        <p class="chat-peer-meta">${match.distance} · 合频 ${match.score}% · ${match.intent}</p>
+      </div>
+    `;
+
+    const thread = document.getElementById('thread');
+    let playdateAccepted = false;
+
+    function nowTime() {
+      const d = new Date();
+      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function appendSoulBanner(score) {
+      const el = document.createElement('div');
+      el.className = 'soul-banner';
+      el.innerHTML = `
+        <p class="soul-banner-title">Soul · 靈魂匹配成功</p>
+        <p class="soul-banner-sub">合频 ${score}% · 雙向 ♥ 解鎖 · 立刻開聊</p>
+      `;
+      thread.appendChild(el);
+    }
+
+    function appendBubble(msg) {
+      if (msg.kind === 'soul-banner') {
+        appendSoulBanner(msg.score);
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.className = `bubble ${msg.from}`;
+      wrap.innerHTML = `${msg.text}<p class="bubble-time">${msg.time || nowTime()}</p>`;
+      thread.appendChild(wrap);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function appendEventCard(tpl, fromMe) {
+      const el = document.createElement('div');
+      el.className = `event-card ${fromMe ? '' : 'them-card'}`;
+      el.innerHTML = `
+        <p class="event-brand">${tpl.brand}</p>
+        <p class="event-title">${tpl.title}</p>
+        <p class="event-row">${tpl.when}</p>
+        <p class="event-row">${tpl.where}</p>
+        <p class="event-note">${tpl.note}</p>
+        ${fromMe ? `
+          <div class="event-actions">
+            <button type="button" class="alt" disabled style="opacity:0.6;cursor:default">等待回覆</button>
+          </div>
+        ` : `
+          <div class="event-actions">
+            <button type="button" class="accept" data-accept="${tpl.type}">接受</button>
+            <button type="button" class="alt" data-decline>改時間</button>
+          </div>
+        `}
+      `;
+      thread.appendChild(el);
+      el.querySelector('[data-accept]')?.addEventListener('click', (e) => {
+        const type = e.target.dataset.accept;
+        if (fromMe) return;
+        showConfirmed(type);
+      });
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function showConfirmed(type) {
+      if (playdateAccepted) return;
+      playdateAccepted = true;
+      const c = window.PETSOUL_PLAYDATE_CONFIRMED;
+      const el = document.createElement('div');
+      el.className = 'confirmed-card';
+      el.innerHTML = `
+        <p class="check">✓</p>
+        <p style="font-size:14px;font-weight:500">${type === 'playdate' ? 'Playdate 已確認' : '見面已確認'}</p>
+        <p style="font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.45">${c.when}<br>${c.where}<br>${c.with}</p>
+      `;
+      thread.appendChild(el);
+      setTimeout(() => {
+        appendBubble({ from: 'them', text: type === 'playdate' ? '好呀！Bella 超愛海濱，明天见～' : '周六见！我会带 Lucky 🐕', time: nowTime() });
+      }, 400);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    const seed = window.PETSOUL_CHAT_SEED[matchId] || [];
+    if (isNew) appendSoulBanner(match.score);
+    seed.forEach(m => {
+      if (m.kind === 'soul-banner' && isNew) return;
+      appendBubble(m);
+    });
+
+    if (isNew) {
+      setTimeout(() => {
+        appendBubble({ from: 'them', text: `嗨！我是 ${match.owner}～同場 Match 成功，想约遛狗吗？`, time: nowTime() });
+      }, 600);
+    }
+
+    document.querySelectorAll('[data-template]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tpl = { ...templates[btn.dataset.template] };
+        appendEventCard(tpl, true);
+        if (matchId === 'bella' && btn.dataset.template === 'playdate') {
+          setTimeout(() => {
+            appendEventCard(tpl, false);
+            const cards = thread.querySelectorAll('.event-card.them-card');
+            const last = cards[cards.length - 1];
+            last.querySelector('.accept').textContent = '接受';
+          }, 1200);
+        }
+        if (btn.dataset.template === 'date' && matchId === 'lucky') {
+          setTimeout(() => {
+            appendBubble({ from: 'them', text: '可以呀！我知道一家可以带狗的咖啡～', time: nowTime() });
+          }, 900);
+        }
+      });
+    });
+
+    document.getElementById('sendBtn').addEventListener('click', sendText);
+    document.getElementById('input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendText();
+    });
+
+    function sendText() {
+      const input = document.getElementById('input');
+      const text = input.value.trim();
+      if (!text) return;
+      appendBubble({ from: 'me', text, time: nowTime() });
+      input.value = '';
+    }
+  </script>
+</body>
+</html>

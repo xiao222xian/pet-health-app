@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <style>
+    .entry {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: calc(48px + var(--safe-top)) 24px calc(24px + var(--safe-bottom));
+    }
+
+    .entry-hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .entry-mark {
+      width: 88px;
+      height: 88px;
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .entry-mark svg {
+      width: 44px;
+      height: 44px;
+      color: var(--ink);
+    }
+
+    .entry-title {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    .entry-sub {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--ink-3);
+      line-height: 1.5;
+      max-width: 280px;
+    }
+
+    .entry-event {
+      margin-top: 40px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .entry-event span:first-child {
+      color: var(--ink-3);
+    }
+
+    .entry-event span:last-child {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .entry-footer {
+      padding-top: 24px;
+    }
+
+    .entry-footer .btn-primary {
+      margin-bottom: 12px;
+    }
+
+    .entry-skip {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink-3);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="entry">
+      <div class="entry-hero">
+        <div class="entry-mark is-float">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.5 2 6 4.5 6 8c0 3.5 2 6.5 4.5 8.5L12 22l1.5-5.5C16 14.5 18 11.5 18 8c0-3.5-2.5-6-6-6zm0 8.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+          </svg>
+        </div>
+        <p class="eyebrow" style="margin-bottom: 8px;">Pet Soul</p>
+        <h1 class="entry-title">先懂牠的 Soul<br>再認識同頻的人</h1>
+        <p class="entry-sub">Soul 式合頻 · Petch 狗格 · FetchaDate 寵先出場。測完入池，現場越刷越多。</p>
+        <div class="entry-event">
+          <span>本場活動</span>
+          <span>Macau Hack · Day 1</span>
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step is-active">建檔</div>
+          <div class="flow-step">鑑定</div>
+          <div class="flow-step">Discover</div>
+        </div>
+      </div>
+      <footer class="entry-footer">
+        <a href="profile.html" class="btn-primary" style="text-decoration:none">填寫基本信息</a>
+        <p style="font-size:11px;color:var(--ink-4);text-align:center;margin:-4px 0 12px">寵圖 · 名字 · 主人線索 → 16 題鑑定 → 入池</p>
+        <a href="discover.html" class="entry-skip">已有名片，直接刷</a>
+        <p class="disclaimer">娛樂向性格測試 · 非約會 App</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

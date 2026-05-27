@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pet Soul · 灵魂揭晓</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <style>
+    .result {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: calc(32px + var(--safe-top)) 24px calc(24px + var(--safe-bottom));
+    }
+
+    .result-hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .result-hero.is-enter .soul-planet,
+    .result-hero.is-enter .result-photo,
+    .result-hero.is-enter .result-code,
+    .result-hero.is-enter .result-title,
+    .result-hero.is-enter .result-persona,
+    .result-hero.is-enter .result-desc,
+    .result-hero.is-enter .result-tags,
+    .result-hero.is-enter .result-stats {
+      animation: riseIn 0.65s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+    }
+
+    .result-hero.is-enter .result-photo { animation-delay: 0.08s; }
+    .result-hero.is-enter .result-code { animation-delay: 0.14s; }
+    .result-hero.is-enter .result-title { animation-delay: 0.18s; }
+    .result-hero.is-enter .result-persona { animation-delay: 0.22s; }
+    .result-hero.is-enter .result-desc { animation-delay: 0.26s; }
+    .result-hero.is-enter .result-tags { animation-delay: 0.3s; }
+    .result-hero.is-enter .result-stats { animation-delay: 0.36s; }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .soul-planet {
+      width: 100%;
+      max-width: 300px;
+      padding: 20px 0 24px;
+      margin-bottom: 8px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .planet-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 8px;
+    }
+
+    .planet-name {
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .planet-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--ink-3);
+      line-height: 1.45;
+    }
+
+    .result-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .result-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .result-code {
+      font-size: 11px;
+      color: var(--ink-4);
+      letter-spacing: 0.06em;
+    }
+
+    .result-title {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-top: 6px;
+    }
+
+    .result-persona {
+      margin-top: 6px;
+      font-size: 15px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+
+    .result-desc {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.55;
+      max-width: 300px;
+    }
+
+    .result-tags {
+      margin-top: 18px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .result-stats {
+      margin-top: 28px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .stat-row:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat-row span:last-child {
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-highlight {
+      color: var(--ink);
+    }
+
+    .result-footer {
+      padding-top: var(--space-section);
+    }
+
+    .result-footer .btn-ghost {
+      width: 100%;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="result">
+      <div class="result-hero" id="resultHero">
+        <p class="eyebrow" style="margin-bottom:20px">Paws-onality · Soul</p>
+
+        <div class="soul-planet">
+          <p class="planet-label">你被分到</p>
+          <p class="planet-name">社交星群 · 太阳系</p>
+          <p class="planet-sub">本場 12 隻狗裡，4 隻可能與你合頻 ≥80%</p>
+        </div>
+
+        <div class="result-photo">
+          <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=300&q=80" alt="豆包" data-profile="petPhoto">
+        </div>
+        <p class="result-code" data-profile="personaCode">ENFP</p>
+        <h1 class="result-title" data-profile="petName">豆包</h1>
+        <p class="result-persona" data-profile="personaLine">柯基 · ENFP · 社交小太陽</p>
+        <p class="result-desc">由你与牠的相处方式映射 · 测验反映人宠 Soul，Discover 时会与对方的相处风格比对。</p>
+
+        <div class="result-tags">
+          <span class="chip">外向</span>
+          <span class="chip">玩瘋</span>
+          <span class="chip">治癒系</span>
+        </div>
+
+        <div class="result-stats">
+          <div class="stat-row">
+            <span style="color:var(--ink-3)">WingPet 已入池</span>
+            <span class="stat-highlight">✓</span>
+          </div>
+          <div class="stat-row">
+            <span style="color:var(--ink-3)">常遛狗點</span>
+            <span data-profile="playArea">氹仔海濱 · 同場</span>
+          </div>
+          <div class="stat-row">
+            <span style="color:var(--ink-3)">同星群</span>
+            <span>4 隻</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="result-footer">
+        <p class="eyebrow" style="margin-bottom:12px;text-align:center;width:100%">Petch · 我的意图</p>
+        <div class="intent-picker" id="intentPicker">
+          <div class="intent-opt"><button type="button" data-intent="遛狗搭子" class="selected">遛狗搭子<span class="mark"></span></button></div>
+          <div class="intent-opt"><button type="button" data-intent="都可">都可<span class="mark"></span></button></div>
+          <div class="intent-opt"><button type="button" data-intent="交友向">交友向<span class="mark"></span></button></div>
+        </div>
+        <div id="lookingForBlock" style="display:none;margin-top:20px;width:100%;max-width:300px;margin-left:auto;margin-right:auto">
+          <p class="eyebrow" style="margin-bottom:12px;text-align:center">交友向 · 想认识</p>
+          <div class="intent-picker" id="lookingForPicker">
+            <div class="intent-opt"><button type="button" data-looking="不限" class="selected">不限<span class="mark"></span></button></div>
+            <div class="intent-opt"><button type="button" data-looking="同性家長">同性家長<span class="mark"></span></button></div>
+            <div class="intent-opt"><button type="button" data-looking="異性家長">異性家長<span class="mark"></span></button></div>
+          </div>
+        </div>
+        <a href="discover.html" class="btn-primary" id="discoverBtn" style="text-decoration:none;display:flex;margin-top:20px">開始刷 WingPet</a>
+        <a href="me.html" class="btn-ghost" style="text-decoration:none;display:flex">我的名片 & QR</a>
+        <p class="disclaimer" style="margin-top:16px">娛樂向性格測試 · 非約會 · 非專業行為評估</p>
+      </footer>
+    </main>
+  </div>
+  <script src="js/profile.js"></script>
+  <script>
+    window.PetSoulProfile.applyToResult(document);
+
+    if (new URLSearchParams(location.search).get('from') === 'quiz') {
+      requestAnimationFrame(() => {
+        document.getElementById('resultHero').classList.add('is-enter');
+      });
+    }
+
+    let intent = window.PetSoulProfile.getIntent();
+    let lookingFor = window.PetSoulProfile.getLookingFor();
+
+    function toggleLookingFor(intentVal) {
+      document.getElementById('lookingForBlock').style.display =
+        intentVal === '交友向' ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('.intent-opt button').forEach(b => {
+      b.classList.toggle('selected', b.dataset.intent === intent);
+    });
+    document.querySelectorAll('#lookingForPicker button').forEach(b => {
+      b.classList.toggle('selected', b.dataset.looking === lookingFor);
+    });
+    toggleLookingFor(intent);
+
+    document.getElementById('intentPicker').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-intent]');
+      if (!btn) return;
+      intent = btn.dataset.intent;
+      document.querySelectorAll('#intentPicker button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      toggleLookingFor(intent);
+    });
+
+    document.getElementById('lookingForPicker').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-looking]');
+      if (!btn) return;
+      lookingFor = btn.dataset.looking;
+      document.querySelectorAll('#lookingForPicker button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+
+    document.getElementById('discoverBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.PetSoulProfile.setIntent(intent);
+      if (intent === '交友向') window.PetSoulProfile.setLookingFor(lookingFor);
+      location.href = 'discover.html';
+    });
+  </script>
+</body>
+</html>
