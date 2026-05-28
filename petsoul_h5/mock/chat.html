@@ -157,6 +157,76 @@
       font-weight: 500;
       cursor: pointer;
     }
+
+    .agent-preview {
+      display: none;
+      margin-bottom: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--bg-2);
+    }
+
+    .agent-preview.is-open {
+      display: block;
+    }
+
+    .agent-preview-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 8px;
+    }
+
+    .agent-preview-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--ink);
+      white-space: pre-wrap;
+    }
+
+    .agent-preview-note {
+      font-size: 10px;
+      color: var(--ink-4);
+      margin-top: 8px;
+    }
+
+    .agent-preview-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .agent-preview-actions button {
+      flex: 1;
+      height: 36px;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .agent-preview-actions .agent-send {
+      border: none;
+      background: var(--ink);
+      color: var(--bg);
+    }
+
+    .agent-preview-actions .agent-edit,
+    .agent-preview-actions .agent-cancel {
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      color: var(--ink-2);
+    }
+
+    .chat-session-badge {
+      font-size: 10px;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -173,14 +243,24 @@
     <main class="chat-thread" id="thread"></main>
 
     <footer class="chat-compose">
-      <p class="template-hint">Petch 約 playdate · FetchaDate 約見面</p>
+      <p class="template-hint">寵物 Agent · 發送前需主人確認 · 臨時會話不加微信</p>
       <div class="template-row" id="templateRow">
         <button type="button" class="template-chip primary" data-template="playdate">🐾 約遛狗</button>
         <button type="button" class="template-chip" data-template="date">☕ 約見面</button>
       </div>
+      <div class="agent-preview" id="agentPreview">
+        <p class="agent-preview-label" id="agentPreviewLabel">寵物 Agent 建議</p>
+        <p class="agent-preview-text" id="agentPreviewText"></p>
+        <div class="agent-preview-actions">
+          <button type="button" class="agent-send" id="agentConfirm">確認發送</button>
+          <button type="button" class="agent-edit" id="agentEdit">改一句</button>
+          <button type="button" class="agent-cancel" id="agentCancel">不用了</button>
+        </div>
+        <p class="agent-preview-note">所有真實消息發送前需主人確認</p>
+      </div>
       <div class="input-row">
-        <input type="text" class="chat-input" id="input" placeholder="立刻開聊…" autocomplete="off">
-        <button type="button" class="send-btn" id="sendBtn">發送</button>
+        <input type="text" class="chat-input" id="input" placeholder="輸入後點發送，先預覽再確認…" autocomplete="off">
+        <button type="button" class="send-btn" id="sendBtn">預覽</button>
       </div>
     </footer>
   </div>
@@ -197,30 +277,61 @@
     const raw = window.PETSOUL_MATCHES[matchId] || window.PETSOUL_MATCHES.bella;
     const match = window.PETSOUL_rescoreMatch(raw);
     const templates = window.PETSOUL_TEMPLATES;
+    const mine = window.PetSoulProfile.load() || {};
+    const myPetName = mine.petName || '豆包';
 
     document.title = `Pet Soul · ${match.name}`;
     document.getElementById('chatPeer').innerHTML = `
       <img src="${match.img}" alt="">
       <div>
         <p class="chat-peer-name">${match.name} · ${match.owner}</p>
+        <p class="chat-session-badge">臨時會話 · 同場 · 不加微信</p>
         <p class="chat-peer-meta">${match.distance} · 合频 ${match.score}% · ${match.intent}</p>
       </div>
     `;
 
     const thread = document.getElementById('thread');
+    const agentPreview = document.getElementById('agentPreview');
+    const agentPreviewText = document.getElementById('agentPreviewText');
+    const agentPreviewLabel = document.getElementById('agentPreviewLabel');
     let playdateAccepted = false;
+    let pendingAction = null;
 
     function nowTime() {
       const d = new Date();
       return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     }
 
+    function showAgentPreview(text, label, onConfirm) {
+      agentPreviewText.textContent = text;
+      agentPreviewLabel.textContent = label || `🐾 ${myPetName} Agent 建議`;
+      pendingAction = onConfirm || { type: 'text', text };
+      agentPreview.classList.add('is-open');
+    }
+
+    function hideAgentPreview() {
+      agentPreview.classList.remove('is-open');
+      pendingAction = null;
+    }
+
+    function confirmPendingAction() {
+      if (!pendingAction) return;
+      if (pendingAction.type === 'text') {
+        appendBubble({ from: 'me', text: pendingAction.text, time: nowTime() });
+        document.getElementById('input').value = '';
+      } else if (pendingAction.type === 'event') {
+        appendEventCard(pendingAction.tpl, true);
+        runEventDemo(pendingAction.tpl);
+      }
+      hideAgentPreview();
+    }
+
     function appendSoulBanner(score) {
       const el = document.createElement('div');
       el.className = 'soul-banner';
       el.innerHTML = `
-        <p class="soul-banner-title">Soul · 靈魂匹配成功</p>
-        <p class="soul-banner-sub">合频 ${score}% · 雙向 ♥ 解鎖 · 立刻開聊</p>
+        <p class="soul-banner-title">緣分羅盤 · 合頻成功</p>
+        <p class="soul-banner-sub">合频 ${score}% · 雙向 ♥ · 臨時會話</p>
       `;
       thread.appendChild(el);
     }
@@ -296,7 +407,6 @@
         appendBubble({ from: 'them', text: `嗨！我是 ${match.owner}～同場 Match 成功，想约遛狗吗？`, time: nowTime() });
       }, 600);
 
-      const mine = window.PetSoulProfile.load() || {};
       const iceFallback = mine.iceHint || `同場見到 ${match.name} 可以打声招呼～`;
       window.PetSoulMS.icebreaker({
         userPetName: mine.petName || '豆包',
@@ -306,54 +416,71 @@
         userIce: mine.iceHint || '',
         theirIce: match.ice || '',
         fallback: iceFallback,
-      }, iceFallback).then(({ text, ai }) => {
-        if (!ai && text === iceFallback) return;
+      }, iceFallback).then(({ text }) => {
         const row = document.getElementById('templateRow');
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'template-chip';
         btn.dataset.aiIce = '1';
-        btn.textContent = ai ? `💬 ${text.slice(0, 18)}${text.length > 18 ? '…' : ''}` : '💬 破冰';
+        btn.textContent = `💬 Agent 破冰`;
         btn.title = text;
         btn.addEventListener('click', () => {
-          document.getElementById('input').value = text;
-          document.getElementById('input').focus();
+          showAgentPreview(text, `🐾 ${myPetName} Agent · 破冰建議`);
         });
         row.appendChild(btn);
       });
     }
 
+    function runEventDemo(tpl) {
+      if (matchId === 'bella' && tpl.type === 'playdate') {
+        setTimeout(() => {
+          appendEventCard(tpl, false);
+          const cards = thread.querySelectorAll('.event-card.them-card');
+          const last = cards[cards.length - 1];
+          last.querySelector('.accept').textContent = '接受';
+        }, 1200);
+      }
+      if (tpl.type === 'date' && matchId === 'lucky') {
+        setTimeout(() => {
+          appendBubble({ from: 'them', text: '可以呀！我知道一家可以带狗的咖啡～', time: nowTime() });
+        }, 900);
+      }
+    }
+
     document.querySelectorAll('[data-template]').forEach(btn => {
       btn.addEventListener('click', () => {
         const tpl = { ...templates[btn.dataset.template] };
-        appendEventCard(tpl, true);
-        if (matchId === 'bella' && btn.dataset.template === 'playdate') {
-          setTimeout(() => {
-            appendEventCard(tpl, false);
-            const cards = thread.querySelectorAll('.event-card.them-card');
-            const last = cards[cards.length - 1];
-            last.querySelector('.accept').textContent = '接受';
-          }, 1200);
-        }
-        if (btn.dataset.template === 'date' && matchId === 'lucky') {
-          setTimeout(() => {
-            appendBubble({ from: 'them', text: '可以呀！我知道一家可以带狗的咖啡～', time: nowTime() });
-          }, 900);
-        }
+        const summary = `${tpl.title}\n${tpl.when}\n${tpl.where}`;
+        showAgentPreview(
+          summary,
+          `🐾 ${myPetName} Agent · ${tpl.brand}`,
+          { type: 'event', tpl }
+        );
       });
     });
 
-    document.getElementById('sendBtn').addEventListener('click', sendText);
+    document.getElementById('agentConfirm').addEventListener('click', confirmPendingAction);
+    document.getElementById('agentEdit').addEventListener('click', () => {
+      if (pendingAction?.type === 'text') {
+        document.getElementById('input').value = pendingAction.text;
+      } else if (pendingAction?.type === 'event') {
+        document.getElementById('input').value = pendingAction.tpl.title;
+      }
+      hideAgentPreview();
+      document.getElementById('input').focus();
+    });
+    document.getElementById('agentCancel').addEventListener('click', hideAgentPreview);
+
+    document.getElementById('sendBtn').addEventListener('click', previewText);
     document.getElementById('input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendText();
+      if (e.key === 'Enter') previewText();
     });
 
-    function sendText() {
+    function previewText() {
       const input = document.getElementById('input');
       const text = input.value.trim();
       if (!text) return;
-      appendBubble({ from: 'me', text, time: nowTime() });
-      input.value = '';
+      showAgentPreview(text, `🐾 ${myPetName} Agent · 待你確認`);
     }
   </script>
 </body>
