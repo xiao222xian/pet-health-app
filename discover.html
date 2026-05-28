@@ -589,6 +589,27 @@
       border-radius: 50%;
       background: var(--alert);
     }
+
+    .pass-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + var(--safe-bottom));
+      transform: translateX(-50%) translateY(12px);
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(29, 29, 31, 0.92);
+      color: #fff;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 90;
+    }
+
+    .pass-toast.is-show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -618,10 +639,12 @@
     </footer>
   </div>
 
+  <div class="pass-toast" id="passToast">已跳過 · 對方不會收到通知</div>
+
   <div class="overlay" id="overlay">
     <div class="match-sheet sheet">
-      <p class="eyebrow">Soul · 靈魂匹配成功</p>
-      <p style="font-size:12px;color:var(--ink-3);margin-top:4px;margin-bottom:4px">FetchaDate 雙向 ♥ · 同場 · 可立刻開聊</p>
+      <p class="eyebrow" id="matchEyebrow">緣分羅盤 · 合頻成功</p>
+      <p style="font-size:12px;color:var(--ink-3);margin-top:4px;margin-bottom:4px">FetchaDate 雙向 ♥ · 同場 · 臨時會話</p>
       <div class="match-row">
         <img id="matchPetImg" src="" alt="">
         <div>
@@ -633,7 +656,7 @@
       <div class="match-breakdown" id="matchBreakdown"></div>
       <div class="match-meta-row" id="matchMeta"></div>
       <div class="match-ice">
-        <p class="match-ice-label">現場破冰</p>
+        <p class="match-ice-label">寵物 Agent · 破冰建議</p>
         <p class="match-ice-text" id="matchIce"></p>
       </div>
       <a class="btn-primary" id="matchChat" href="chat.html?match=bella&new=1" style="text-decoration:none;display:flex">立刻開聊</a>
@@ -977,6 +1000,13 @@
       if (top) bindCard(top);
     }
 
+    function showPassToast() {
+      const toast = document.getElementById('passToast');
+      toast.classList.add('is-show');
+      clearTimeout(showPassToast._t);
+      showPassToast._t = setTimeout(() => toast.classList.remove('is-show'), 2200);
+    }
+
     function dismiss(direction, liked) {
       const top = stackEl.querySelector('.wing-card');
       if (!top) return;
@@ -986,6 +1016,7 @@
       top.style.transform = '';
       top.style.opacity = '';
       top.classList.add(direction === 'right' ? 'is-exit-right' : 'is-exit-left');
+      if (!liked) showPassToast();
       setTimeout(() => {
         index += 1;
         updatePoolLabel();
@@ -1006,6 +1037,7 @@
     }
 
     function showMatch(data) {
+      document.getElementById('matchEyebrow').textContent = `緣分羅盤 · 合頻 ${data.score}%`;
       document.getElementById('matchPetImg').src = data.img;
       document.getElementById('matchScore').innerHTML = `${data.score}<span>%</span>`;
       document.getElementById('matchName').textContent = `${data.name} · ${data.breed}`;
