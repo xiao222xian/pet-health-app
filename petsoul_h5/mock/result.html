@@ -185,7 +185,7 @@
         <p class="result-code" data-profile="personaCode">ENFP</p>
         <h1 class="result-title" data-profile="petName">豆包</h1>
         <p class="result-persona" data-profile="personaLine">柯基 · ENFP · 社交小太陽</p>
-        <p class="result-desc">由你与牠的相处方式映射 · 测验反映人宠 Soul，Discover 时会与对方的相处风格比对。</p>
+        <p class="result-desc" id="resultDesc">由你与牠的相处方式映射 · 测验反映人宠 Soul，Discover 时会与对方的相处风格比对。</p>
 
         <div class="result-tags">
           <span class="chip">外向</span>
@@ -231,8 +231,26 @@
     </main>
   </div>
   <script src="js/profile.js"></script>
+  <script src="js/ms-config.js"></script>
+  <script src="js/ms-api.js"></script>
   <script>
     window.PetSoulProfile.applyToResult(document);
+
+    (function loadSoulReveal() {
+      const el = document.getElementById('resultDesc');
+      const p = window.PetSoulProfile.load() || {};
+      const fallback = el.textContent;
+      window.PetSoulMS.soulResult({
+        petName: p.petName || '豆包',
+        breed: p.breed || '柯基',
+        personaCode: p.personaCode || 'ENFP',
+        personaTitle: p.personaTitle || '社交小太陽',
+        playArea: p.playArea || '同場',
+      }, fallback).then(({ text, ai }) => {
+        el.textContent = text;
+        if (ai) el.dataset.ai = '1';
+      });
+    })();
 
     if (new URLSearchParams(location.search).get('from') === 'quiz') {
       requestAnimationFrame(() => {

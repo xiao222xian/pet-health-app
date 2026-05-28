@@ -174,7 +174,7 @@
 
     <footer class="chat-compose">
       <p class="template-hint">Petch 約 playdate · FetchaDate 約見面</p>
-      <div class="template-row">
+      <div class="template-row" id="templateRow">
         <button type="button" class="template-chip primary" data-template="playdate">🐾 約遛狗</button>
         <button type="button" class="template-chip" data-template="date">☕ 約見面</button>
       </div>
@@ -188,6 +188,8 @@
   <script src="js/match-engine.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/matches-data.js"></script>
+  <script src="js/ms-config.js"></script>
+  <script src="js/ms-api.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const matchId = params.get('match') || 'bella';
@@ -293,6 +295,32 @@
       setTimeout(() => {
         appendBubble({ from: 'them', text: `嗨！我是 ${match.owner}～同場 Match 成功，想约遛狗吗？`, time: nowTime() });
       }, 600);
+
+      const mine = window.PetSoulProfile.load() || {};
+      const iceFallback = mine.iceHint || `同場見到 ${match.name} 可以打声招呼～`;
+      window.PetSoulMS.icebreaker({
+        userPetName: mine.petName || '豆包',
+        theirPetName: match.name,
+        theirOwner: match.owner || '',
+        playArea: mine.playArea || match.distance || '同場',
+        userIce: mine.iceHint || '',
+        theirIce: match.ice || '',
+        fallback: iceFallback,
+      }, iceFallback).then(({ text, ai }) => {
+        if (!ai && text === iceFallback) return;
+        const row = document.getElementById('templateRow');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'template-chip';
+        btn.dataset.aiIce = '1';
+        btn.textContent = ai ? `💬 ${text.slice(0, 18)}${text.length > 18 ? '…' : ''}` : '💬 破冰';
+        btn.title = text;
+        btn.addEventListener('click', () => {
+          document.getElementById('input').value = text;
+          document.getElementById('input').focus();
+        });
+        row.appendChild(btn);
+      });
     }
 
     document.querySelectorAll('[data-template]').forEach(btn => {

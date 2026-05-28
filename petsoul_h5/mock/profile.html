@@ -234,6 +234,76 @@
       gap: 8px;
     }
 
+    .age-slider-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+
+    .age-slider-head .field-label {
+      margin-bottom: 0;
+    }
+
+    .age-slider-value {
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+
+    .age-slider-value span {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink-3);
+      margin-left: 2px;
+    }
+
+    .age-slider-wrap {
+      padding: 8px 4px 0;
+    }
+
+    .age-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--line-strong);
+      border-radius: 1px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .age-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--ink);
+    }
+
+    .age-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--ink);
+      cursor: pointer;
+    }
+
+    .age-slider-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--ink-4);
+      font-variant-numeric: tabular-nums;
+    }
+
     .age-row button, .tag-row button {
       padding: 8px 14px;
       border-radius: 999px;
@@ -410,7 +480,7 @@
             </svg>
             <span class="photo-tap-label">點擊上傳寵物照片</span>
           </label>
-          <p class="photo-hint">建議：光線充足 · 正脸 · 單隻狗 · 現場可即拍</p>
+          <p class="photo-hint" id="photoHint">建議：光線充足 · 正脸 · 單隻狗 · 現場可即拍</p>
 
           <div class="field">
             <p class="field-label">名字</p>
@@ -418,13 +488,19 @@
           </div>
 
           <div class="field">
-            <p class="field-label">品種</p>
-            <div class="breed-row" id="breedRow">
-              <button type="button" class="breed-chip is-active" data-breed="柯基">柯基</button>
-              <button type="button" class="breed-chip" data-breed="柴犬">柴犬</button>
-              <button type="button" class="breed-chip" data-breed="黃金獵犬">黃金獵犬</button>
-              <button type="button" class="breed-chip" data-breed="混種">混種</button>
+            <p class="field-label">宠物类型</p>
+            <div class="breed-row" id="petTypeRow">
+              <button type="button" class="breed-chip is-active" data-type="dog">狗狗</button>
+              <button type="button" class="breed-chip" data-type="cat">猫猫</button>
+              <button type="button" class="breed-chip" data-type="other">其他</button>
             </div>
+            <input type="text" class="field-input" id="petTypeOther" placeholder="例如：兔子、仓鼠、鸟…" style="display:none;margin-top:10px" maxlength="12">
+          </div>
+
+          <div class="field">
+            <p class="field-label" id="breedLabel">品种</p>
+            <div class="breed-row" id="breedRow"></div>
+            <input type="text" class="field-input" id="breedCustom" placeholder="填写品种" style="display:none;margin-top:10px" maxlength="16">
           </div>
         </section>
 
@@ -443,18 +519,21 @@
           </div>
 
           <div class="field">
-            <p class="field-label">年龄</p>
-            <div class="age-row" id="ageRow">
-              <button type="button" data-age="20s">20+</button>
-              <button type="button" data-age="25" class="is-active">25</button>
-              <button type="button" data-age="28">28</button>
-              <button type="button" data-age="30s">30+</button>
-              <button type="button" data-age="35">35+</button>
+            <div class="age-slider-head">
+              <p class="field-label">年龄</p>
+              <p class="age-slider-value" id="ownerAgeValue">28<span>岁</span></p>
+            </div>
+            <div class="age-slider-wrap">
+              <input type="range" class="age-slider" id="ownerAgeSlider" min="18" max="60" value="28" step="1" aria-label="年龄">
+              <div class="age-slider-scale">
+                <span>18</span>
+                <span>60</span>
+              </div>
             </div>
           </div>
 
           <div class="field">
-            <p class="field-label">我的性别（可选 · 交友向时用）</p>
+            <p class="field-label">性别</p>
             <div class="age-row" id="genderRow">
               <button type="button" data-gender="女">女</button>
               <button type="button" data-gender="男">男</button>
@@ -463,14 +542,49 @@
           </div>
 
           <div class="field">
-            <p class="field-label">一句标签</p>
-            <div class="tag-row" id="tagRow">
-              <button type="button" data-tag="設計系" class="is-active">設計系</button>
-              <button type="button" data-tag="工程師">工程師</button>
-              <button type="button" data-tag="護士">護士</button>
-              <button type="button" data-tag="自由業">自由業</button>
+            <p class="field-label">职业</p>
+            <div class="tag-row" id="jobRow">
+              <button type="button" data-job="設計" class="is-active">設計</button>
+              <button type="button" data-job="工程">工程</button>
+              <button type="button" data-job="護士">護士</button>
+              <button type="button" data-job="金融">金融</button>
+              <button type="button" data-job="教育">教育</button>
+              <button type="button" data-job="自由業">自由業</button>
+              <button type="button" data-job="學生">學生</button>
             </div>
-            <input type="text" class="field-input" id="ownerTagCustom" placeholder="或自定义，如：夜遛党" style="margin-top:10px">
+            <input type="text" class="field-input" id="ownerJobCustom" placeholder="或自定义职业" style="margin-top:10px" maxlength="12">
+          </div>
+
+          <div class="field">
+            <p class="field-label">婚否</p>
+            <div class="age-row" id="maritalRow">
+              <button type="button" data-marital="未婚">未婚</button>
+              <button type="button" data-marital="已婚">已婚</button>
+              <button type="button" data-marital="" class="is-active">不透露</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <p class="field-label">学历</p>
+            <div class="tag-row" id="eduRow">
+              <button type="button" data-edu="高中">高中及以下</button>
+              <button type="button" data-edu="本科" class="is-active">本科</button>
+              <button type="button" data-edu="硕士">硕士</button>
+              <button type="button" data-edu="博士">博士</button>
+              <button type="button" data-edu="">不透露</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <p class="field-label">期望的搭子</p>
+            <div class="tag-row" id="buddyRow">
+              <button type="button" data-buddy="固定遛狗搭子" class="is-active">固定遛狗搭子</button>
+              <button type="button" data-buddy="周末可约">周末可约</button>
+              <button type="button" data-buddy="同区域优先">同区域优先</button>
+              <button type="button" data-buddy="慢热慢慢熟">慢热慢慢熟</button>
+              <button type="button" data-buddy="交友向">交友向</button>
+            </div>
+            <p class="photo-hint">Discover 合频后也会参考你在结果页选的意图</p>
           </div>
 
           <div class="field">
@@ -541,11 +655,16 @@
     const DEFAULT_OWNER_IMG = 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80';
     let step = 1;
     let breed = '柯基';
+    let petType = 'dog';
+    let petTypeOther = '';
     let petPhoto = DEFAULT_PET_IMG;
     let ownerPhoto = DEFAULT_OWNER_IMG;
-    let ownerAge = '25';
+    let ownerAge = '28';
     let ownerGender = '';
-    let ownerTag = '設計系';
+    let ownerJob = '設計';
+    let ownerMarital = '';
+    let ownerEducation = '本科';
+    let ownerBuddyWant = '固定遛狗搭子';
     let previewRevealed = false;
 
     const panel1 = document.getElementById('panel1');
@@ -553,6 +672,56 @@
     const nextBtn = document.getElementById('nextBtn');
     const skipOwnerBtn = document.getElementById('skipOwnerBtn');
     const petPhotoTap = document.getElementById('petPhotoTap');
+
+    const BREEDS_BY_TYPE = {
+      dog: ['柯基', '柴犬', '黃金獵犬', '混種'],
+      cat: ['英短', '布偶', '暹羅', '混種'],
+    };
+
+    const PHOTO_HINTS = {
+      dog: '建議：光線充足 · 正脸 · 單隻狗 · 現場可即拍',
+      cat: '建議：光線充足 · 正脸 · 單隻貓 · 現場可即拍',
+      other: '建議：光線充足 · 清晰正脸 · 單隻萌寵',
+    };
+
+    function renderBreedRow() {
+      const row = document.getElementById('breedRow');
+      const custom = document.getElementById('breedCustom');
+      const label = document.getElementById('breedLabel');
+      document.getElementById('photoHint').textContent = PHOTO_HINTS[petType] || PHOTO_HINTS.other;
+      document.getElementById('petTypeOther').style.display = petType === 'other' ? 'block' : 'none';
+
+      if (petType === 'other') {
+        row.innerHTML = '';
+        row.style.display = 'none';
+        custom.style.display = 'block';
+        label.textContent = '品种 / 种类';
+        if (!custom.value.trim()) custom.placeholder = '例如：兔子、仓鼠';
+        breed = custom.value.trim() || breed;
+        return;
+      }
+
+      row.style.display = 'flex';
+      custom.style.display = 'none';
+      label.textContent = '品种';
+      const list = BREEDS_BY_TYPE[petType] || BREEDS_BY_TYPE.dog;
+      if (!list.includes(breed)) breed = list[0];
+      row.innerHTML = list.map((b) =>
+        `<button type="button" class="breed-chip${b === breed ? ' is-active' : ''}" data-breed="${b}">${b}</button>`
+      ).join('');
+    }
+
+    function setPetType(type) {
+      petType = type;
+      document.querySelectorAll('#petTypeRow .breed-chip').forEach((c) => {
+        c.classList.toggle('is-active', c.dataset.type === type);
+      });
+      if (type !== 'other') {
+        const list = BREEDS_BY_TYPE[type];
+        if (!list.includes(breed)) breed = list[0];
+      }
+      renderBreedRow();
+    }
 
     function petNameVal() {
       return document.getElementById('petName').value.trim() || '豆包';
@@ -562,10 +731,56 @@
       return document.getElementById('ownerClue').value.trim();
     }
 
+    function parseOwnerAge(raw) {
+      if (raw == null || raw === '') return 28;
+      const digits = parseInt(String(raw).replace(/[^\d]/g, ''), 10);
+      if (Number.isFinite(digits) && digits >= 18 && digits <= 60) return digits;
+      if (raw === '20s') return 22;
+      if (raw === '30s') return 32;
+      if (raw === '35' || raw === '35+') return 35;
+      return 28;
+    }
+
+    function setOwnerAge(val) {
+      ownerAge = String(val);
+      const slider = document.getElementById('ownerAgeSlider');
+      const label = document.getElementById('ownerAgeValue');
+      slider.value = val;
+      label.innerHTML = `${val}<span>岁</span>`;
+    }
+
+    function ownerJobVal() {
+      return document.getElementById('ownerJobCustom').value.trim() || ownerJob;
+    }
+
+    function genderLabel(g) {
+      if (g === '女') return '女';
+      if (g === '男') return '男';
+      return '';
+    }
+
     function ownerRevealedLine() {
       const nick = document.getElementById('ownerNickname').value.trim() || '豆包妈';
-      const tag = document.getElementById('ownerTagCustom').value.trim() || ownerTag;
-      return `${nick} · ${ownerAge} · ${tag}`;
+      const job = ownerJobVal();
+      const g = genderLabel(ownerGender);
+      const line1 = [nick, `${ownerAge}岁`, g, job].filter(Boolean).join(' · ');
+      const line2 = [
+        ownerEducation && ownerEducation !== '' ? ownerEducation : '',
+        ownerMarital && ownerMarital !== '' ? ownerMarital : '',
+        ownerBuddyWant ? `想找${ownerBuddyWant}` : '',
+      ].filter(Boolean).join(' · ');
+      return line2 ? `${line1}\n${line2}` : line1;
+    }
+
+    function bindChipRow(rowId, attr, onPick) {
+      document.getElementById(rowId).addEventListener('click', (e) => {
+        const btn = e.target.closest(`button[data-${attr}]`);
+        if (!btn) return;
+        onPick(btn.dataset[attr]);
+        document.querySelectorAll(`#${rowId} button`).forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        updatePreview();
+      });
     }
 
     function updatePreview() {
@@ -579,38 +794,52 @@
       const avatar = document.getElementById('previewAvatar');
       avatar.classList.toggle('is-blur', !previewRevealed);
       avatar.classList.toggle('is-revealed', previewRevealed);
-      document.getElementById('previewOwnerText').textContent = previewRevealed
-        ? ownerRevealedLine()
-        : '点 ? 揭晓主人';
+      if (previewRevealed) {
+        const [line1, line2] = ownerRevealedLine().split('\n');
+        document.getElementById('previewOwnerText').textContent = line1;
+        document.getElementById('previewOwnerSub').textContent = line2 || 'Fetch Who\'s Behind';
+      } else {
+        document.getElementById('previewOwnerText').textContent = '点 ? 揭晓主人';
+        document.getElementById('previewOwnerSub').textContent = 'Fetch Who\'s Behind';
+      }
+    }
+
+    function activateRow(rowId, attr, value) {
+      document.querySelectorAll(`#${rowId} button`).forEach((b) => {
+        b.classList.toggle('is-active', b.dataset[attr] === value);
+      });
     }
 
     const saved = window.PetSoulProfile.load();
     if (saved) {
       document.getElementById('petName').value = saved.petName || '豆包';
-      breed = saved.breed || '柯基';
-      document.querySelectorAll('.breed-chip').forEach(c => {
-        c.classList.toggle('is-active', c.dataset.breed === breed);
+      petType = saved.petType || 'dog';
+      petTypeOther = saved.petTypeOther || '';
+      if (petTypeOther) document.getElementById('petTypeOther').value = petTypeOther;
+      document.querySelectorAll('#petTypeRow .breed-chip').forEach((c) => {
+        c.classList.toggle('is-active', c.dataset.type === petType);
       });
+      breed = saved.breed || (petType === 'cat' ? '英短' : '柯基');
+      if (petType === 'other') {
+        document.getElementById('breedCustom').value = breed;
+      }
+      renderBreedRow();
       if (saved.petPhoto) setPetPreview(saved.petPhoto);
       if (saved.ownerNickname) document.getElementById('ownerNickname').value = saved.ownerNickname;
-      if (saved.ownerAge) {
-        ownerAge = saved.ownerAge;
-        document.querySelectorAll('#ageRow button').forEach(b => {
-          b.classList.toggle('is-active', b.dataset.age === ownerAge);
-        });
-      }
+      if (saved.ownerAge != null) setOwnerAge(parseOwnerAge(saved.ownerAge));
       if (saved.ownerGender !== undefined) {
         ownerGender = saved.ownerGender || '';
-        document.querySelectorAll('#genderRow button').forEach(b => {
-          b.classList.toggle('is-active', b.dataset.gender === ownerGender);
-        });
+        activateRow('genderRow', 'gender', ownerGender);
       }
-      if (saved.ownerTag) {
-        ownerTag = saved.ownerTag;
-        document.querySelectorAll('#tagRow button').forEach(b => {
-          b.classList.toggle('is-active', b.dataset.tag === ownerTag);
-        });
-      }
+      ownerJob = saved.ownerJob || saved.ownerTag || '設計';
+      if (saved.ownerJobCustom) document.getElementById('ownerJobCustom').value = saved.ownerJobCustom;
+      activateRow('jobRow', 'job', ownerJob);
+      ownerMarital = saved.ownerMarital ?? '';
+      activateRow('maritalRow', 'marital', ownerMarital);
+      ownerEducation = saved.ownerEducation ?? '本科';
+      activateRow('eduRow', 'edu', ownerEducation);
+      ownerBuddyWant = saved.ownerBuddyWant || '固定遛狗搭子';
+      activateRow('buddyRow', 'buddy', ownerBuddyWant);
       if (saved.ownerClue) document.getElementById('ownerClue').value = saved.ownerClue;
       if (saved.playArea) document.getElementById('playArea').value = saved.playArea;
       if (saved.iceHint) document.getElementById('iceHint').value = saved.iceHint;
@@ -618,7 +847,22 @@
     } else {
       setPetPreview(DEFAULT_PET_IMG);
       setOwnerPreview(DEFAULT_OWNER_IMG);
+      renderBreedRow();
     }
+
+    document.getElementById('petTypeRow').addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-type]');
+      if (!chip) return;
+      setPetType(chip.dataset.type);
+    });
+
+    document.getElementById('petTypeOther').addEventListener('input', (e) => {
+      petTypeOther = e.target.value.trim();
+    });
+
+    document.getElementById('breedCustom').addEventListener('input', (e) => {
+      breed = e.target.value.trim();
+    });
 
     document.getElementById('breedRow').addEventListener('click', (e) => {
       const chip = e.target.closest('.breed-chip');
@@ -628,12 +872,8 @@
       chip.classList.add('is-active');
     });
 
-    document.getElementById('ageRow').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-age]');
-      if (!btn) return;
-      ownerAge = btn.dataset.age;
-      document.querySelectorAll('#ageRow button').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
+    document.getElementById('ownerAgeSlider').addEventListener('input', (e) => {
+      setOwnerAge(e.target.value);
       updatePreview();
     });
 
@@ -641,19 +881,17 @@
       const btn = e.target.closest('button[data-gender]');
       if (!btn) return;
       ownerGender = btn.dataset.gender;
-      document.querySelectorAll('#genderRow button').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-    });
-
-    document.getElementById('tagRow').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-tag]');
-      if (!btn) return;
-      ownerTag = btn.dataset.tag;
-      document.getElementById('ownerTagCustom').value = '';
-      document.querySelectorAll('#tagRow button').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
+      activateRow('genderRow', 'gender', ownerGender);
       updatePreview();
     });
+
+    bindChipRow('jobRow', 'job', (v) => {
+      ownerJob = v;
+      document.getElementById('ownerJobCustom').value = '';
+    });
+    bindChipRow('maritalRow', 'marital', (v) => { ownerMarital = v; });
+    bindChipRow('eduRow', 'edu', (v) => { ownerEducation = v; });
+    bindChipRow('buddyRow', 'buddy', (v) => { ownerBuddyWant = v; });
 
     document.getElementById('clueChips').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-clue]');
@@ -663,7 +901,7 @@
       updatePreview();
     });
 
-    ['ownerNickname', 'ownerClue', 'ownerTagCustom', 'playArea', 'iceHint', 'petName'].forEach(id => {
+    ['ownerNickname', 'ownerClue', 'ownerJobCustom', 'playArea', 'iceHint', 'petName'].forEach(id => {
       document.getElementById(id).addEventListener('input', updatePreview);
     });
 
@@ -715,18 +953,33 @@
     });
 
     function saveProfile() {
-      const tag = document.getElementById('ownerTagCustom').value.trim() || ownerTag;
+      if (petType === 'other') {
+        breed = document.getElementById('breedCustom').value.trim()
+          || document.getElementById('petTypeOther').value.trim()
+          || '萌寵';
+        petTypeOther = document.getElementById('petTypeOther').value.trim();
+      }
+      const jobCustom = document.getElementById('ownerJobCustom').value.trim();
+      const job = jobCustom || ownerJob;
+      const revealed = ownerRevealedLine();
       window.PetSoulProfile.save({
         petName: petNameVal(),
+        petType,
+        petTypeOther,
         breed,
         petPhoto,
         ownerNickname: document.getElementById('ownerNickname').value.trim(),
         ownerAge,
         ownerGender,
-        ownerTag: tag,
+        ownerJob: job,
+        ownerJobCustom: jobCustom,
+        ownerTag: job,
+        ownerMarital,
+        ownerEducation,
+        ownerBuddyWant,
         ownerClue: window.PetSoulProfile.formatClue(petNameVal(), clueText()),
         ownerPhoto,
-        ownerRevealed: ownerRevealedLine(),
+        ownerRevealed: revealed,
         playArea: document.getElementById('playArea').value.trim(),
         iceHint: document.getElementById('iceHint').value.trim(),
       });
@@ -743,6 +996,11 @@
       if (step === 1) {
         if (!petNameVal()) {
           document.getElementById('petName').focus();
+          return;
+        }
+        if (petType === 'other' && !document.getElementById('breedCustom').value.trim()
+            && !document.getElementById('petTypeOther').value.trim()) {
+          document.getElementById('breedCustom').focus();
           return;
         }
         step = 2;

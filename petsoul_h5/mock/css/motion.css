@@ -59,7 +59,8 @@
 }
 
 .q-opt.is-stagger {
-  animation: fadeUp 0.38s var(--ease-out) both;
+  /* 测验页不用 transform 入场，避免与 slide 层叠叠字 */
+  animation: fadeIn 0.28s var(--ease-out) both;
 }
 
 .analyze-core.is-pulse {

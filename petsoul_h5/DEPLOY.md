@@ -10,6 +10,8 @@
 
 部署目录固定为：**`petsoul_h5/mock/`**（不是整个 `petsoul_h5`）。
 
+**AI 文案（方案 B）**：魔搭 Studio BFF 在 `petsoul_h5/studio/`，H5 通过 `mock/js/ms-config.js` 配置 BFF 地址。未配置时自动用静态兜底文案。
+
 ---
 
 ## 方案 A · GitHub Pages（约 5 分钟）
