@@ -52,12 +52,40 @@
       will-change: transform, opacity;
       transition: transform 0.35s var(--ease-out), opacity 0.28s ease;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      z-index: 1;
+    }
+
+    .wing-card:not(.is-behind):not(.is-exit-left):not(.is-exit-right) {
+      z-index: 2;
+    }
+
+    .wing-card.is-exit-left,
+    .wing-card.is-exit-right {
+      z-index: 3;
     }
 
     .wing-card.is-behind {
       transform: scale(0.97) translateY(6px);
       opacity: 0.5;
       pointer-events: none;
+    }
+
+    /* 背层只保留宠图，避免与顶层 hero 文案叠字 */
+    .wing-card.is-behind .hero-overlay,
+    .wing-card.is-behind .hero-badge,
+    .wing-card.is-behind .hero-match,
+    .wing-card.is-behind .card-float-actions,
+    .wing-card.is-behind .swipe-labels,
+    .wing-card.is-behind .clue-drawer {
+      visibility: hidden;
+    }
+
+    /* 抽屉展开时收起 hero，避免同卡内上下文案重叠 */
+    .wing-card:has(.clue-drawer[data-open="1"]) .hero-overlay,
+    .wing-card:has(.clue-drawer[data-open="1"]) .card-float-actions {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
     }
 
     .wing-card.is-exit-left {
@@ -153,6 +181,7 @@
       z-index: 2;
       padding: 0 18px 8px;
       pointer-events: none;
+      transition: opacity 0.22s ease;
     }
 
     .hero-pet-name {
@@ -508,6 +537,7 @@
       font-size: 13px;
       color: var(--ink-2);
       line-height: 1.45;
+      white-space: pre-line;
     }
 
     .match-sheet .btn-primary {
@@ -548,10 +578,6 @@
 
     .top-link-wrap {
       position: relative;
-    }
-
-    .match-ice-text {
-      white-space: pre-line;
     }
 
     .top-badge {
@@ -945,7 +971,8 @@
         setTimeout(() => { location.href = 'discover-empty.html'; }, 400);
         return;
       }
-      stackEl.innerHTML = CARDS.slice(index, index + 2).map((c, i) => cardHtml(c, i)).join('');
+      stackEl.replaceChildren();
+      stackEl.insertAdjacentHTML('beforeend', cardHtml(CARDS[index], 0));
       const top = stackEl.querySelector('.wing-card');
       if (top) bindCard(top);
     }
@@ -954,16 +981,19 @@
       const top = stackEl.querySelector('.wing-card');
       if (!top) return;
       const data = CARDS[index];
-      top.classList.remove('is-dragging', 'is-spring-back');
+      top.classList.remove('is-dragging', 'is-spring-back', 'show-like', 'show-pass');
       top.style.transition = '';
+      top.style.transform = '';
+      top.style.opacity = '';
       top.classList.add(direction === 'right' ? 'is-exit-right' : 'is-exit-left');
       setTimeout(() => {
         index += 1;
         updatePoolLabel();
+        renderStack();
         if (liked) {
           if (data.mutual) showMatch(data);
           else showPending(data);
-        } else renderStack();
+        }
       }, 300);
     }
 
@@ -1017,8 +1047,10 @@
           fallback: iceFallback,
         }, iceFallback),
       ]).then(([blurb, ice]) => {
-        if (blurb.ai) document.getElementById('matchCopy').textContent = blurb.text;
-        if (ice.ai) document.getElementById('matchIce').textContent = ice.text;
+        const copyEl = document.getElementById('matchCopy');
+        const iceEl = document.getElementById('matchIce');
+        if (blurb.ai && copyEl) copyEl.textContent = blurb.text;
+        if (ice.ai && iceEl) iceEl.textContent = ice.text;
       });
     }
 
