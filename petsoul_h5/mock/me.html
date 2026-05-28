@@ -5,202 +5,161 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Pet Soul · 我的名片</title>
   <link rel="stylesheet" href="css/shared.css">
-  <style>
-    .me-top {
-      padding: calc(16px + var(--safe-top)) 20px 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .me-back {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .me-main {
-      flex: 1;
-      padding: 40px 24px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .me-avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: var(--radius);
-      background: var(--bg-2);
-      overflow: hidden;
-    }
-
-    .me-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .me-name {
-      margin-top: 16px;
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-    }
-
-    .me-sub {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--ink-3);
-    }
-
-    .me-nav {
-      margin-top: 28px;
-      width: 100%;
-      border-top: 1px solid var(--line);
-    }
-
-    .me-nav a {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 0;
-      font-size: 14px;
-      color: var(--ink);
-      text-decoration: none;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .me-nav a span:last-child {
-      color: var(--ink-3);
-      font-size: 13px;
-    }
-
-    .me-intent {
-      margin-top: 10px;
-    }
-
-    .me-stat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 0;
-      font-size: 14px;
-    }
-
-    .me-stat-row + .me-stat-row {
-      border-top: 1px solid var(--line);
-    }
-
-    .me-stat-row span:last-child {
-      color: var(--ink-3);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .qr-block {
-      margin-top: 40px;
-      width: 200px;
-      height: 200px;
-      background: var(--bg-2);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--line);
-    }
-
-    .qr-block svg {
-      width: 160px;
-      height: 160px;
-    }
-
-    .qr-hint {
-      margin-top: 16px;
-      font-size: 12px;
-      color: var(--ink-3);
-      text-align: center;
-      line-height: 1.5;
-    }
-
-    .me-footer {
-      padding: 24px;
-      padding-bottom: calc(24px + var(--safe-bottom));
-    }
-  </style>
+  <link rel="stylesheet" href="css/persona-card.css">
 </head>
 <body>
-  <div class="app">
+  <div class="app me-page">
     <header class="me-top">
       <a class="me-back" href="discover.html" aria-label="返回">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </a>
-      <span class="eyebrow">My Soul Card</span>
+      <h1 class="me-page-title">✦ 我的 WingPet 名片 ✦</h1>
     </header>
 
-    <main class="me-main">
-      <div class="me-avatar">
-        <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=200&q=80" alt="" data-profile="petPhoto">
-      </div>
-      <h1 class="me-name" data-profile="petName">豆包</h1>
-      <p class="me-sub" data-profile="petSub">柯基 · ENFP 社交小太陽</p>
-      <p class="me-intent"><span class="chip" id="meIntent">我的意圖 · 遛狗搭子</span></p>
-      <p class="me-intent" style="margin-top:6px"><span class="chip" data-profile="playArea">氹仔海濱 · 同場</span></p>
+    <main class="me-scroll">
+      <article class="persona-card" id="personaCard">
+        <div class="persona-card__top"></div>
+        <div class="persona-avatar">
+          <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=300&q=80" alt="" data-profile="petPhoto">
+        </div>
+        <div class="persona-card__body">
+          <div class="persona-name-row">
+            <h2 class="persona-name" data-profile="petName">豆包</h2>
+            <span class="persona-code-badge" data-profile="personaCode">ENFP</span>
+          </div>
+          <p class="persona-meta" data-profile="personaMeta">柯基 · 社交小太陽 · 氹仔海濱</p>
 
-      <nav class="me-nav">
-        <a href="matches.html">合頻列表 <span>2 · 1 未讀</span></a>
-        <a href="discover.html">繼續刷 Discover <span>→</span></a>
-        <a href="profile.html">編輯基本信息 <span>→</span></a>
-        <a href="card.html">公開名片 <span>→</span></a>
+          <div class="persona-tags" id="personaTags" aria-label="性格标签"></div>
+
+          <section class="persona-section">
+            <p class="persona-section-label">性格小傳</p>
+            <p class="persona-bio" id="personaBio" data-profile="personaBio">社交小太陽型毛孩，同場最亮的那顆星。</p>
+          </section>
+
+          <div class="persona-prefs">
+            <div>
+              <p class="pref-label">喜歡</p>
+              <ul class="pref-list" id="personaLikes"></ul>
+            </div>
+            <div>
+              <p class="pref-label">不喜歡</p>
+              <ul class="pref-list" id="personaDislikes"></ul>
+            </div>
+          </div>
+
+          <section class="persona-section">
+            <p class="persona-section-label">WingPet 線索</p>
+            <p class="persona-bio" data-profile="ownerClue">豆包說：週末都在氹仔海濱，想找固定遛狗搭子。</p>
+          </section>
+
+          <div class="persona-foot">
+            <span><strong id="meIntent">意圖 · 遛狗搭子</strong></span>
+            <span data-profile="playArea">氹仔海濱 · 同場</span>
+          </div>
+        </div>
+      </article>
+
+      <div class="intent-row">
+        <span class="chip" id="meIntentChip">遛狗搭子</span>
+        <span class="chip" data-profile="playArea">氹仔海濱</span>
+        <span class="chip">WingPet 已入池</span>
+      </div>
+
+      <aside class="share-card" aria-label="分享名片">
+        <div class="share-card__head">
+          <strong>名片已生成</strong>
+          <span>掃碼分享</span>
+        </div>
+        <div class="share-card__banner">
+          <p class="share-banner-title">一起去玩吧！</p>
+          <p class="share-banner-sub">同場 · 臨時會話 · 不加微信</p>
+          <div class="share-duo">
+            <img class="share-duo-av" src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=120&q=80" alt="" data-profile="petPhoto">
+            <span class="share-duo-heart">♥</span>
+            <img class="share-duo-av" src="https://images.unsplash.com/photo-1619983081563-430f63602796?w=120&q=80" alt="" aria-hidden="true">
+          </div>
+        </div>
+        <div class="share-card__details">
+          <div class="share-detail">
+            <span class="share-detail-icon">📍</span>
+            <div>
+              <p class="share-detail-label">常去區域</p>
+              <p data-profile="playArea">氹仔海濱 · 同場</p>
+            </div>
+          </div>
+          <div class="share-detail">
+            <span class="share-detail-icon">🎯</span>
+            <div>
+              <p class="share-detail-label">我的意圖</p>
+              <p id="shareIntent">遛狗搭子</p>
+            </div>
+          </div>
+          <div class="share-detail">
+            <span class="share-detail-icon">💬</span>
+            <div>
+              <p class="share-detail-label">破冰提示</p>
+              <p data-profile="iceHint">同場測驗區附近</p>
+            </div>
+          </div>
+        </div>
+        <div class="share-card__qr">
+          <div class="qr-frame" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="var(--ink)">
+              <rect x="8" y="8" width="28" height="28" rx="2"/>
+              <rect x="64" y="8" width="28" height="28" rx="2"/>
+              <rect x="8" y="64" width="28" height="28" rx="2"/>
+              <rect x="14" y="14" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="70" y="14" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="14" y="70" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="44" y="8" width="8" height="8"/>
+              <rect x="44" y="24" width="8" height="8"/>
+              <rect x="52" y="44" width="8" height="8"/>
+              <rect x="44" y="52" width="8" height="8"/>
+              <rect x="64" y="44" width="8" height="8"/>
+              <rect x="80" y="52" width="8" height="8"/>
+              <rect x="44" y="64" width="8" height="8"/>
+              <rect x="64" y="72" width="8" height="8"/>
+              <rect x="80" y="72" width="8" height="8"/>
+              <rect x="44" y="80" width="8" height="8"/>
+            </svg>
+          </div>
+          <p class="qr-slug" data-profile="slug">petsoul.app/c/doubao</p>
+          <div class="share-tips">
+            · 線下見面請選公共場所<br>
+            · 寵物 Agent 破冰，主人確認後發送<br>
+            · 娛樂向性格測試，非約會
+          </div>
+        </div>
+      </aside>
+
+      <nav class="me-actions">
+        <a class="me-action" href="matches.html">合頻列表 <span>2 · 1 未讀</span></a>
+        <a class="me-action" href="discover.html">繼續刷 Discover <span>→</span></a>
+        <a class="me-action" href="profile.html">編輯基本信息 <span>→</span></a>
+        <a class="me-action" href="card.html">公開名片頁 <span>→</span></a>
       </nav>
-
-      <div class="me-stat" style="margin-top:24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-        <div class="me-stat-row">
-          <span>今日已刷</span>
-          <span>8</span>
-        </div>
-        <div class="me-stat-row">
-          <span>雙向合頻</span>
-          <span>2</span>
-        </div>
-      </div>
-
-      <div class="qr-block" aria-hidden="true">
-        <svg viewBox="0 0 100 100" fill="var(--ink)">
-          <rect x="8" y="8" width="28" height="28" rx="2"/>
-          <rect x="64" y="8" width="28" height="28" rx="2"/>
-          <rect x="8" y="64" width="28" height="28" rx="2"/>
-          <rect x="14" y="14" width="16" height="16" fill="var(--bg-2)"/>
-          <rect x="70" y="14" width="16" height="16" fill="var(--bg-2)"/>
-          <rect x="14" y="70" width="16" height="16" fill="var(--bg-2)"/>
-          <rect x="44" y="8" width="8" height="8"/>
-          <rect x="44" y="24" width="8" height="8"/>
-          <rect x="52" y="44" width="8" height="8"/>
-          <rect x="44" y="52" width="8" height="8"/>
-          <rect x="64" y="44" width="8" height="8"/>
-          <rect x="80" y="52" width="8" height="8"/>
-          <rect x="44" y="64" width="8" height="8"/>
-          <rect x="64" y="72" width="8" height="8"/>
-          <rect x="80" y="72" width="8" height="8"/>
-          <rect x="44" y="80" width="8" height="8"/>
-        </svg>
-      </div>
-      <p class="qr-hint">掃碼查看 WingPet 名片<br><span data-profile="slug">petsoul.app/c/doubao</span></p>
     </main>
 
     <footer class="me-footer">
-      <button type="button" class="btn-ghost" style="width:100%">分享名片</button>
+      <button type="button" class="btn-primary" id="shareBtn">分享名片</button>
+      <a href="discover.html" class="btn-ghost" style="text-decoration:none">返回 Discover</a>
     </footer>
   </div>
   <script src="js/profile.js"></script>
   <script>
     window.PetSoulProfile.applyToMe(document);
-    document.getElementById('meIntent').textContent = `我的意圖 · ${window.PetSoulProfile.getIntent()}`;
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const slug = document.querySelector('[data-profile="slug"]')?.textContent || '';
+      if (navigator.share) {
+        navigator.share({ title: 'Pet Soul WingPet', text: slug, url: location.href.replace('me.html', 'card.html') }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(slug);
+        document.getElementById('shareBtn').textContent = '已複製連結';
+        setTimeout(() => { document.getElementById('shareBtn').textContent = '分享名片'; }, 2000);
+      }
+    });
   </script>
 </body>
 </html>

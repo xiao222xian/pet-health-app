@@ -94,57 +94,133 @@ window.PetSoulProfile = {
     return line2.length ? `${line1}\n${line2.join(' · ')}` : line1;
   },
 
-  applyToResult(root) {
-    const p = this.load();
-    if (!p) return;
-    const img = root.querySelector('[data-profile="petPhoto"]');
-    const name = root.querySelector('[data-profile="petName"]');
-    const personaLine = root.querySelector('[data-profile="personaLine"]');
-    const area = root.querySelector('[data-profile="playArea"]');
-    const code = root.querySelector('[data-profile="personaCode"]');
-    if (img && p.petPhoto) img.src = p.petPhoto;
-    if (name) name.textContent = p.petName || name.textContent;
-    if (personaLine && p.personaCode) {
-      personaLine.textContent = `${p.breed || '柯基'} · ${p.personaCode} · ${p.personaTitle || '社交小太陽'}`;
+  personaTraitTags(p) {
+    const soul = p?.ownerSoul;
+    const tags = [];
+    if (p?.personaTitle) tags.push({ text: p.personaTitle, accent: true });
+    if (!soul) {
+      return tags.length ? tags : [{ text: '社交小太陽', accent: true }];
     }
-    if (code) code.textContent = p.personaCode || 'ENFP';
-    if (area && p.playArea) area.textContent = p.playArea;
+    if (soul.social >= 0.65) tags.push({ text: '外向社交' });
+    else if (soul.social < 0.45) tags.push({ text: '慢熱型' });
+    if (soul.bond >= 0.65) tags.push({ text: '黏人寶' });
+    if (soul.play >= 0.65) tags.push({ text: '愛玩瘋' });
+    if (soul.energy >= 0.65) tags.push({ text: '體力充沛' });
+    else if (soul.energy < 0.45) tags.push({ text: '佛系慢活' });
+    return tags.slice(0, 4);
   },
 
-  applyToMe(root) {
+  personaPrefs(p) {
+    const soul = p?.ownerSoul || {};
+    const likes = [];
+    const dislikes = [];
+    const add = (arr, icon, text, ok) => { if (ok) arr.push({ icon, text }); };
+
+    add(likes, '🐕', '散步', soul.energy >= 0.45);
+    add(likes, '☀️', '戶外曬太陽', soul.energy >= 0.55);
+    add(likes, '🎾', '玩瘋', soul.play >= 0.55);
+    add(likes, '👋', '交朋友', soul.social >= 0.55);
+    add(likes, '🛋️', '安靜陪伴', soul.bond >= 0.55 && soul.energy < 0.55);
+    add(likes, '🦴', '小零食', soul.play >= 0.45);
+
+    add(dislikes, '📢', '大嗓門', soul.social < 0.55);
+    add(dislikes, '👀', '陌生突襲', soul.social < 0.5);
+    add(dislikes, '⏰', '等太久', soul.energy >= 0.6);
+
+    if (likes.length < 2) {
+      likes.push({ icon: '🧸', text: '玩具' }, { icon: '🐾', text: '同場玩耍' });
+    }
+    if (dislikes.length < 1) {
+      dislikes.push({ icon: '📢', text: '嘈雜環境' });
+    }
+    return { likes: likes.slice(0, 4), dislikes: dislikes.slice(0, 3) };
+  },
+
+  renderPrefList(ul, items) {
+    if (!ul) return;
+    ul.innerHTML = items.map(({ icon, text }) =>
+      `<li class="pref-item"><span class="pref-icon">${icon}</span>${text}</li>`
+    ).join('');
+  },
+
+  personaBioFallback(p) {
+    const name = p?.petName || '牠';
+    const title = p?.personaTitle || '社交小太陽';
+    const soul = p?.ownerSoul;
+    if (!soul) {
+      return `${name}是「${title}」——同場最會帶氣氛的那隻，適合找固定玩伴一起撒歡。`;
+    }
+    const bits = [];
+    if (soul.social >= 0.6) bits.push('見狗就熱情');
+    else if (soul.social < 0.45) bits.push('慢熱但一熟就很黏');
+    if (soul.play >= 0.6) bits.push('玩起來停不下來');
+    if (soul.energy >= 0.6) bits.push('體力好、愛戶外');
+    else if (soul.energy < 0.45) bits.push('佛系慢活、喜歡安靜陪走');
+    const tail = bits.length ? bits.join('，') : '性格均衡、好相處';
+    return `${name}是「${title}」——${tail}。Discover 時會和對方的相處風格做緣分羅盤比對。`;
+  },
+
+  applyToPersonaCard(root) {
     const p = this.load();
     if (!p) return;
-    const img = root.querySelector('[data-profile="petPhoto"]');
+    root.querySelectorAll('[data-profile="petPhoto"]').forEach((img) => {
+      if (p.petPhoto) img.src = p.petPhoto;
+    });
     const name = root.querySelector('[data-profile="petName"]');
-    const sub = root.querySelector('[data-profile="petSub"]');
-    const owner = root.querySelector('[data-profile="ownerLine"]');
-    const area = root.querySelector('[data-profile="playArea"]');
-    const slug = root.querySelector('[data-profile="slug"]');
-    if (img && p.petPhoto) img.src = p.petPhoto;
+    const meta = root.querySelector('[data-profile="personaMeta"]');
+    const code = root.querySelector('[data-profile="personaCode"]');
+    const bio = root.querySelector('[data-profile="personaBio"]');
+    const tagsEl = root.querySelector('#personaTags');
     if (name) name.textContent = p.petName || name.textContent;
-    if (sub && p.personaCode) {
-      sub.textContent = `${p.breed || '柯基'} · ${p.personaCode} ${p.personaTitle || ''}`.trim();
-    } else if (sub) sub.textContent = `${p.breed || '柯基'} · ENFP 社交小太陽`;
-    if (owner) owner.textContent = this.ownerRevealed(p) || '主人 · 現場揭曉';
-    if (area && p.playArea) area.textContent = p.playArea;
+    if (meta) {
+      meta.textContent = [
+        p.breed || '柯基',
+        p.personaTitle || '社交小太陽',
+        p.playArea || '同場',
+      ].filter(Boolean).join(' · ');
+    }
+    if (code) code.textContent = p.personaCode || 'ENFP';
+    root.querySelectorAll('[data-profile="playArea"]').forEach((el) => {
+      if (p.playArea) el.textContent = p.playArea;
+    });
+    if (bio) bio.textContent = p.soulBio || this.personaBioFallback(p);
+    if (tagsEl) {
+      tagsEl.innerHTML = this.personaTraitTags(p).map(({ text, accent }) =>
+        `<span class="persona-tag${accent ? ' is-accent' : ''}">${text}</span>`
+      ).join('');
+    }
+    const prefs = this.personaPrefs(p);
+    this.renderPrefList(root.querySelector('#personaLikes'), prefs.likes);
+    this.renderPrefList(root.querySelector('#personaDislikes'), prefs.dislikes);
+    const clue = root.querySelector('[data-profile="ownerClue"]');
+    if (clue) clue.textContent = p.ownerClue || this.formatClue(p.petName, p.iceHint || '');
+    const ice = root.querySelector('[data-profile="iceHint"]');
+    if (ice) ice.textContent = p.iceHint || '同場 · 測驗區附近';
+    const slug = root.querySelector('[data-profile="slug"]');
     if (slug) slug.textContent = `petsoul.app/c/${this.slugFromName(p.petName)}`;
   },
 
+  applyToResult(root) {
+    this.applyToPersonaCard(root);
+  },
+
+  applyToMe(root) {
+    this.applyToPersonaCard(root);
+    const intent = this.getIntent();
+    ['meIntent', 'meIntentChip', 'shareIntent'].forEach((id) => {
+      const el = root.getElementById(id);
+      if (!el) return;
+      el.textContent = id === 'meIntent' ? `意圖 · ${intent}` : intent;
+    });
+  },
+
   applyToCard(root) {
+    this.applyToPersonaCard(root);
     const p = this.load();
-    if (!p) return;
-    const hero = root.querySelector('[data-profile="petPhoto"]');
-    const name = root.querySelector('[data-profile="petName"]');
-    const breed = root.querySelector('[data-profile="breed"]');
-    const clue = root.querySelector('[data-profile="ownerClue"]');
     const owner = root.querySelector('[data-profile="ownerRevealed"]');
-    if (hero && p.petPhoto) hero.src = p.petPhoto;
-    if (name) name.textContent = p.petName || '豆包';
-    if (breed && p.personaCode) {
-      breed.textContent = `${p.breed || '柯基'} · ${p.personaCode} · ${p.personaTitle || ''}`.trim();
-    } else if (breed) breed.textContent = `${p.breed || '柯基'} · 社交小太陽`;
-    if (clue) clue.textContent = p.ownerClue || this.formatClue(p.petName, '');
-    if (owner) owner.textContent = this.ownerRevealed(p);
+    if (owner) owner.textContent = this.ownerRevealed(p) || '主人 · 合頻後揭曉';
+    const intentEl = root.getElementById('cardIntent');
+    if (intentEl) intentEl.textContent = this.getIntent();
   },
 
   iceHintForMatch(theirIce) {
