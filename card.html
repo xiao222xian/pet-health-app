@@ -3,129 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Pet Soul · Bella</title>
+  <title>Pet Soul · WingPet 名片</title>
   <link rel="stylesheet" href="css/shared.css">
-  <style>
-    .card-page {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-hero {
-      flex: 1;
-      min-height: 55vh;
-      background: var(--bg-2);
-      position: relative;
-    }
-
-    .card-hero img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .card-body {
-      padding: 24px 24px calc(24px + var(--safe-bottom));
-      margin-top: -16px;
-      background: var(--bg);
-      border-radius: 16px 16px 0 0;
-      position: relative;
-    }
-
-    .card-name {
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-    }
-
-    .card-breed {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--ink-3);
-    }
-
-    .card-persona {
-      margin-top: 4px;
-      font-size: 11px;
-      color: var(--ink-4);
-    }
-
-    .card-section {
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
-    }
-
-    .card-section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-3);
-      margin-bottom: 10px;
-    }
-
-    .card-section-text {
-      font-size: 14px;
-      color: var(--ink-2);
-      line-height: 1.5;
-    }
-
-    .card-tags {
-      margin-top: 16px;
-      display: flex;
-      gap: 6px;
-    }
-
-    .card-actions {
-      margin-top: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .card-url {
-      margin-top: 16px;
-      font-size: 11px;
-      color: var(--ink-4);
-      text-align: center;
-    }
-  </style>
+  <link rel="stylesheet" href="css/persona-card.css">
 </head>
 <body>
   <div class="app card-page">
-    <div class="card-hero">
-      <img src="https://images.unsplash.com/photo-1619983081563-430f63602796?w=900&q=80" alt="Bella" data-profile="petPhoto">
-    </div>
-    <div class="card-body">
-      <p class="eyebrow">WingPet Card</p>
-      <h1 class="card-name" data-profile="petName">Bella</h1>
-      <p class="card-breed" data-profile="breed">柯基 · 社交小太陽</p>
-      <p class="card-persona">ENFP · 娛樂向</p>
-      <div class="card-tags">
-        <span class="chip">外向</span>
-        <span class="chip">玩瘋</span>
+    <main class="me-scroll">
+      <div class="card-public-badge">
+        <p class="eyebrow">WingPet Card · 公開名片</p>
       </div>
 
-      <section class="card-section">
-        <p class="card-section-label">WingPet 線索</p>
-        <p class="card-section-text" data-profile="ownerClue">Bella 說：我媽週末都在氹仔海濱，想找固定遛狗搭子，不聊感情只聊狗。</p>
-      </section>
+      <article class="persona-card persona-card--public" id="personaCard">
+        <div class="persona-card__top"></div>
+        <div class="persona-avatar">
+          <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=300&q=80" alt="" data-profile="petPhoto">
+        </div>
+        <div class="persona-card__body">
+          <div class="persona-name-row">
+            <h1 class="persona-name" data-profile="petName">豆包</h1>
+            <span class="persona-code-badge" data-profile="personaCode">ENFP</span>
+          </div>
+          <p class="persona-meta" data-profile="personaMeta">柯基 · 社交小太陽 · 氹仔海濱</p>
 
-      <section class="card-section">
-        <p class="card-section-label">主人 · 揭晓后</p>
-        <p class="card-section-text" data-profile="ownerRevealed">B媽 · 28 · 設計系 · 合頻 87%</p>
-      </section>
+          <div class="persona-tags" id="personaTags" aria-label="性格标签"></div>
 
-      <div class="card-actions">
-        <a href="discover.html" class="btn-primary" style="text-decoration:none">在 Discover 刷更多</a>
-        <a href="me.html" class="btn-ghost" style="text-decoration:none;display:flex">我的名片</a>
+          <section class="persona-section">
+            <p class="persona-section-label">性格小傳</p>
+            <p class="persona-bio" id="personaBio" data-profile="personaBio">社交小太陽型毛孩，同場最亮的那顆星。</p>
+          </section>
+
+          <div class="persona-prefs">
+            <div>
+              <p class="pref-label">喜歡</p>
+              <ul class="pref-list" id="personaLikes"></ul>
+            </div>
+            <div>
+              <p class="pref-label">不喜歡</p>
+              <ul class="pref-list" id="personaDislikes"></ul>
+            </div>
+          </div>
+
+          <section class="persona-section">
+            <p class="persona-section-label">WingPet 線索</p>
+            <p class="persona-bio" data-profile="ownerClue">豆包說：週末都在氹仔海濱，想找固定遛狗搭子。</p>
+          </section>
+
+          <section class="persona-section">
+            <p class="persona-section-label">主人 · 合頻後揭曉</p>
+            <p class="persona-bio" data-profile="ownerRevealed">主人 · 現場揭曉</p>
+          </section>
+
+          <div class="persona-foot">
+            <span><strong id="cardIntent">遛狗搭子</strong></span>
+            <span data-profile="playArea">氹仔海濱 · 同場</span>
+          </div>
+        </div>
+      </article>
+
+      <aside class="share-card" aria-label="掃碼加 WingPet">
+        <div class="share-card__head">
+          <strong>掃碼加 WingPet</strong>
+          <span>同場臨時會話</span>
+        </div>
+        <div class="share-card__banner">
+          <p class="share-banner-title">Let's go play!</p>
+          <p class="share-banner-sub">一起去玩吧 · 寵物 Agent 破冰</p>
+          <div class="share-duo">
+            <img class="share-duo-av" src="https://images.unsplash.com/photo-1548199973-03cce0bbc087?w=120&q=80" alt="" data-profile="petPhoto">
+            <span class="share-duo-heart">♥</span>
+            <span class="share-duo-heart" style="width:44px;height:44px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:18px">?</span>
+          </div>
+        </div>
+        <div class="share-card__qr">
+          <div class="qr-frame" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="var(--ink)">
+              <rect x="8" y="8" width="28" height="28" rx="2"/>
+              <rect x="64" y="8" width="28" height="28" rx="2"/>
+              <rect x="8" y="64" width="28" height="28" rx="2"/>
+              <rect x="14" y="14" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="70" y="14" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="14" y="70" width="16" height="16" fill="var(--bg-2)"/>
+              <rect x="44" y="8" width="8" height="8"/>
+              <rect x="44" y="24" width="8" height="8"/>
+              <rect x="52" y="44" width="8" height="8"/>
+              <rect x="44" y="52" width="8" height="8"/>
+              <rect x="64" y="44" width="8" height="8"/>
+              <rect x="80" y="52" width="8" height="8"/>
+              <rect x="44" y="64" width="8" height="8"/>
+              <rect x="64" y="72" width="8" height="8"/>
+              <rect x="80" y="72" width="8" height="8"/>
+              <rect x="44" y="80" width="8" height="8"/>
+            </svg>
+          </div>
+          <p class="qr-slug" data-profile="slug">petsoul.app/c/doubao</p>
+          <div class="share-tips">
+            · 線下見面請選公共場所<br>
+            · 所有消息發送前需主人確認<br>
+            · 娛樂向性格測試 · 非約會
+          </div>
+        </div>
+      </aside>
+
+      <div style="margin-top:20px;width:100%;max-width:340px">
+        <a href="discover.html" class="btn-primary" style="text-decoration:none;display:flex">在 Discover 刷更多</a>
+        <a href="me.html" class="btn-ghost" style="text-decoration:none;display:flex;margin-top:10px">我的名片</a>
       </div>
-      <p class="card-url">petsoul.app/c/bella</p>
-    </div>
+    </main>
   </div>
   <script src="js/profile.js"></script>
-  <script>window.PetSoulProfile.applyToCard(document);</script>
+  <script>
+    window.PetSoulProfile.applyToCard(document);
+  </script>
 </body>
 </html>
