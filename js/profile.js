@@ -48,6 +48,18 @@ window.PetSoulProfile = {
     return this.load()?.lookingFor || '不限';
   },
 
+  getPetType() {
+    const t = this.load()?.petType;
+    return ['dog', 'cat', 'other'].includes(t) ? t : 'dog';
+  },
+
+  getPetTypeLabel() {
+    const p = this.load();
+    if (p?.petType === 'other' && p.petTypeOther) return p.petTypeOther;
+    const labels = { dog: '狗狗', cat: '貓貓', other: '萌寵' };
+    return labels[p?.petType] || labels.dog;
+  },
+
   markQuizDone() {
     sessionStorage.setItem(this.QUIZ_KEY, '1');
     this.save({ quizDone: true });
@@ -67,8 +79,19 @@ window.PetSoulProfile = {
   ownerRevealed(p) {
     if (!p) return '';
     if (p.ownerRevealed) return p.ownerRevealed;
-    const parts = [p.ownerNickname, p.ownerAge, p.ownerTag].filter(Boolean);
-    return parts.join(' · ');
+    const g = p.ownerGender === '女' ? '女' : p.ownerGender === '男' ? '男' : '';
+    const line1 = [
+      p.ownerNickname,
+      p.ownerAge ? `${p.ownerAge}岁` : '',
+      g,
+      p.ownerJob || p.ownerTag,
+    ].filter(Boolean).join(' · ');
+    const line2 = [
+      p.ownerEducation,
+      p.ownerMarital,
+      p.ownerBuddyWant ? `想找${p.ownerBuddyWant}` : '',
+    ].filter((x) => x && x !== '');
+    return line2.length ? `${line1}\n${line2.join(' · ')}` : line1;
   },
 
   applyToResult(root) {

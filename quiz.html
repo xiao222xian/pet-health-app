@@ -33,6 +33,36 @@
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .quiz-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .quiz-back:disabled {
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .quiz-top-center {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
     .quiz-count {
@@ -55,21 +85,19 @@
       flex-direction: column;
       padding: 24px 24px 16px;
       opacity: 0;
-      transform: translateX(24px);
       pointer-events: none;
-      transition: opacity 0.36s cubic-bezier(0.25, 0.8, 0.25, 1),
-                  transform 0.36s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transition: opacity 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
     .quiz-slide.is-active {
       opacity: 1;
-      transform: translateX(0);
       pointer-events: auto;
+      z-index: 1;
     }
 
     .quiz-slide.is-exit {
       opacity: 0;
-      transform: translateX(-24px);
+      z-index: 0;
     }
 
     .intro-center {
@@ -152,8 +180,8 @@
     .q-text {
       font-size: 19px;
       font-weight: 500;
-      letter-spacing: -0.025em;
-      line-height: 1.35;
+      letter-spacing: 0;
+      line-height: 1.45;
       color: var(--ink);
       margin-bottom: 24px;
     }
@@ -168,15 +196,23 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       padding: 18px 0;
       border: none;
       background: transparent;
       font-family: inherit;
       font-size: 14px;
+      line-height: 1.45;
       color: var(--ink-2);
       text-align: left;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    .q-opt-label {
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
     }
 
     .q-opt button.is-picked {
@@ -310,8 +346,15 @@
     <div class="quiz-bar"><div class="quiz-bar-fill" id="barFill"></div></div>
 
     <header class="quiz-top">
-      <span class="eyebrow">靈魂鑑定 · 初階</span>
-      <span class="quiz-count" id="countLabel">0 / 16</span>
+      <button type="button" class="quiz-back" id="backBtn" aria-label="上一题">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <div class="quiz-top-center">
+        <span class="eyebrow" id="quizEyebrow">靈魂鑑定 · 初階</span>
+        <span class="quiz-count" id="countLabel">0 / 16</span>
+      </div>
     </header>
 
     <main class="quiz-stage" id="stage"></main>
@@ -340,7 +383,11 @@
   </script>
   <script src="js/questions.js"></script>
   <script>
-    const QUESTIONS = window.PETSOUL_QUIZ.flat;
+    const profile = window.PetSoulProfile.load() || {};
+    const petType = window.PetSoulProfile.getPetType();
+    const petTypeLabel = window.PETSOUL_QUIZ.getTypeLabel(petType);
+    const petName = profile.petName || '牠';
+    const QUESTIONS = window.PETSOUL_QUIZ.getFlat(petType);
     const TOTAL = QUESTIONS.length;
 
     const stage = document.getElementById('stage');
@@ -348,24 +395,41 @@
     const countLabel = document.getElementById('countLabel');
     const footer = document.getElementById('footer');
     const analyze = document.getElementById('analyze');
+    const backBtn = document.getElementById('backBtn');
+    const quizEyebrow = document.getElementById('quizEyebrow');
 
     let qIndex = -1; // -1 = intro
-    const answers = [];
+    const answers = new Array(TOTAL);
+
+    function updateBackBtn() {
+      backBtn.disabled = false;
+    }
+
+    backBtn.addEventListener('click', () => {
+      if (qIndex <= 0) {
+        location.href = 'profile.html';
+        return;
+      }
+      qIndex -= 1;
+      renderQuestion(true);
+    });
 
     function renderIntro() {
       qIndex = -1;
+      quizEyebrow.textContent = `靈魂鑑定 · ${petTypeLabel}`;
       countLabel.textContent = `0 / ${TOTAL}`;
       barFill.style.width = '0%';
+      backBtn.disabled = false;
       footer.innerHTML = `
         <button type="button" class="btn-primary" id="startBtn">開始 · 16 題</button>
-        <p class="disclaimer" style="margin-top:14px">娛樂向 · 非專業行為評估</p>
+        <p class="disclaimer" style="margin-top:14px">為${petName}定制 · 娛樂向 · 非專業行為評估</p>
       `;
       stage.innerHTML = `
         <section class="quiz-slide is-active" id="slide-intro">
           <div class="intro-center">
-            <p class="eyebrow">Paws-onality · 初階</p>
-            <h1 class="intro-title">16 個場景<br>讀懂牠的 Soul</h1>
-            <p class="intro-sub">Soul 做分級測驗；Petch 看能量與玩風。初階 16 題、約 2 分鐘，測完進星群、入池開刷。</p>
+            <p class="eyebrow">Paws-onality · 初階 · ${petTypeLabel}</p>
+            <h1 class="intro-title">16 個場景<br>讀懂${petName}的 Soul</h1>
+            <p class="intro-sub">題目依${petTypeLabel}日常調整。Soul 做分級測驗；Petch 看能量與玩風。約 2 分鐘，測完進星群、入池開刷。</p>
             <div class="intro-meta">
               <div class="intro-meta-row">
                 <span style="color:var(--ink-3)">題量</span>
@@ -389,39 +453,39 @@
       });
     }
 
-    function renderQuestion(isFirst) {
+    function clearStage() {
+      stage.querySelectorAll('.quiz-slide').forEach((s) => s.remove());
+    }
+
+    function renderQuestion(replace) {
       const item = QUESTIONS[qIndex];
       const pct = ((qIndex + 1) / TOTAL) * 100;
       barFill.style.width = pct + '%';
       countLabel.textContent = `${qIndex + 1} / ${TOTAL}`;
+      updateBackBtn();
 
-      footer.innerHTML = `<p class="disclaimer">點選自動下一題 · ${qIndex + 1}/${TOTAL}</p>`;
+      footer.innerHTML = `<p class="disclaimer">← 上一題 · 点选后自动下一题 · ${qIndex + 1}/${TOTAL}</p>`;
 
       const showSection =
         qIndex === 0 || QUESTIONS[qIndex - 1].sectionId !== item.sectionId;
 
-      const prev = stage.querySelector('.quiz-slide.is-active');
-      if (prev && !isFirst) {
-        prev.classList.remove('is-active');
-        prev.classList.add('is-exit');
-        setTimeout(() => prev.remove(), 380);
-      }
+      clearStage();
 
       const slide = document.createElement('section');
       slide.className = 'quiz-slide is-active';
       slide.innerHTML = `
         <div class="q-center">
           ${showSection ? `
-            <p class="q-section is-new">${item.sectionLabel}</p>
+            <p class="q-section">${item.sectionLabel}</p>
             <p class="q-section-hint">${item.sectionHint}</p>
           ` : ''}
           <p class="q-index">${String(qIndex + 1).padStart(2, '0')} / ${String(TOTAL).padStart(2, '0')}</p>
           <h2 class="q-text">${item.q}</h2>
           <ul class="q-options">
             ${item.opts.map((opt, i) => `
-              <li class="q-opt is-stagger" style="animation-delay:${0.05 + i * 0.05}s">
+              <li class="q-opt">
                 <button type="button" data-i="${i}">
-                  ${opt}
+                  <span class="q-opt-label">${opt}</span>
                   <span class="dot"></span>
                 </button>
               </li>
@@ -431,16 +495,23 @@
       `;
       stage.appendChild(slide);
 
+      const saved = answers[qIndex];
+      if (saved != null) {
+        const picked = slide.querySelector(`button[data-i="${saved}"]`);
+        if (picked) picked.classList.add('is-picked');
+      }
+
       slide.querySelectorAll('.q-opt button').forEach(btn => {
         btn.addEventListener('click', () => pickAnswer(btn));
       });
     }
 
     function pickAnswer(btn) {
-      if (btn.classList.contains('is-picked')) return;
-      answers.push(parseInt(btn.dataset.i, 10));
-      btn.classList.add('is-picked');
-      btn.closest('.quiz-slide').querySelectorAll('button').forEach(b => {
+      const idx = parseInt(btn.dataset.i, 10);
+      answers[qIndex] = idx;
+      const slide = btn.closest('.quiz-slide');
+      slide.querySelectorAll('.q-opt button').forEach((b) => {
+        b.classList.toggle('is-picked', b === btn);
         b.style.pointerEvents = 'none';
       });
 
@@ -458,19 +529,14 @@
       barFill.style.width = '100%';
       countLabel.textContent = '完成';
       footer.innerHTML = '';
-      const active = stage.querySelector('.quiz-slide.is-active');
-      if (active) {
-        active.classList.remove('is-active');
-        active.classList.add('is-exit');
-        setTimeout(() => active.remove(), 380);
-      }
+      clearStage();
       analyze.classList.add('is-visible');
 
       const steps = [
         '讀取能量 & 社交…',
         '分析玩風 & 學習…',
         '對齊情緒 & 依戀…',
-        '分配星群 · 生成狗格…',
+        '分配星群 · 生成性格…',
       ];
       const stepEl = document.getElementById('analyzeSteps');
       let si = 0;
@@ -484,7 +550,7 @@
       setTimeout(() => {
         clearInterval(stepTimer);
         const scored = window.PetSoulMatch.scoreQuizAnswers(answers);
-        window.PetSoulProfile.save(scored);
+        window.PetSoulProfile.save({ ...scored, petType });
         window.PetSoulProfile.markQuizDone();
         window.location.href = 'result.html?from=quiz';
       }, 2000);

@@ -35,7 +35,7 @@
     .stack-wrap {
       flex: 1;
       position: relative;
-      margin: 0 12px 4px;
+      margin: 0 8px calc(8px + var(--safe-bottom));
       min-height: 0;
     }
 
@@ -47,10 +47,11 @@
     .wing-card {
       position: absolute;
       inset: 0;
-      border-radius: var(--radius);
+      border-radius: 20px;
       overflow: hidden;
       will-change: transform, opacity;
       transition: transform 0.35s var(--ease-out), opacity 0.28s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     }
 
     .wing-card.is-behind {
@@ -72,18 +73,13 @@
     .card-surface {
       position: absolute;
       inset: 0;
-      bottom: 88px;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg);
       touch-action: pan-y;
     }
 
     .pet-hero {
-      flex: 1;
-      min-height: 0;
+      position: absolute;
+      inset: 0;
       background: var(--bg-2);
-      position: relative;
       touch-action: none;
     }
 
@@ -94,69 +90,175 @@
       pointer-events: none;
     }
 
+    .hero-gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.28) 0%,
+        transparent 22%,
+        transparent 48%,
+        rgba(0, 0, 0, 0.35) 72%,
+        rgba(0, 0, 0, 0.82) 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      background: #f2c94c;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #1d1d1f;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .hero-badge svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+
     .hero-match {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 6px 10px;
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: var(--radius);
-      font-size: 12px;
+      top: 14px;
+      right: 14px;
+      z-index: 2;
+      padding: 5px 10px;
+      background: rgba(0, 0, 0, 0.52);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 999px;
+      font-size: 11px;
       font-weight: 500;
+      color: #fff;
       font-variant-numeric: tabular-nums;
     }
 
-    .hero-distance {
+    .hero-overlay {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      padding: 6px 10px;
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: var(--radius);
-      font-size: 11px;
-      color: var(--ink-2);
+      left: 0;
+      right: 0;
+      bottom: 112px;
+      z-index: 2;
+      padding: 0 18px 8px;
+      pointer-events: none;
     }
 
-    .intent-chip {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line-strong);
-      font-size: 11px;
-      color: var(--ink);
+    .hero-pet-name {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: #fff;
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
     }
 
-    .pet-meta {
-      padding: 14px 16px 12px;
-      flex-shrink: 0;
-      touch-action: none;
-    }
-
-    .pet-name {
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-    }
-
-    .pet-breed {
-      margin-top: 5px;
+    .hero-pet-sub {
+      margin-top: 6px;
       font-size: 13px;
-      color: var(--ink-3);
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.75);
     }
 
-    .pet-why {
-      margin-top: 8px;
-      font-size: 12px;
-      color: var(--ink-2);
-    }
-
-    .pet-tags {
+    .hero-pet-bio {
       margin-top: 10px;
+    }
+
+    .hero-pet-bio-line {
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-pet-bio-line + .hero-pet-bio-line {
+      margin-top: 2px;
+    }
+
+    .hero-tags {
+      margin-top: 12px;
       display: flex;
-      gap: 6px;
       flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.42);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 11px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .hero-tag.is-light {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .hero-tag.is-accent {
+      background: rgba(59, 130, 246, 0.85);
+      border: none;
+    }
+
+    .card-float-actions {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 100px;
+      z-index: 2;
+      display: flex;
+      gap: 12px;
+    }
+
+    .float-btn {
+      flex: 1;
+      height: 54px;
+      border: none;
+      border-radius: 27px;
+      background: rgba(29, 29, 31, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .float-btn:active {
+      transform: scale(0.97);
+    }
+
+    .float-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .float-btn.like {
+      background: rgba(29, 29, 31, 0.88);
+    }
+
+    .float-btn.like svg {
+      fill: #ff6b8a;
     }
 
     .swipe-labels {
@@ -197,9 +299,11 @@
       right: 0;
       bottom: 0;
       height: 220px;
-      background: var(--bg);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-top: 1px solid var(--line);
-      border-radius: 14px 14px 0 0;
+      border-radius: 18px 18px 0 0;
       touch-action: none;
       z-index: 3;
       will-change: transform;
@@ -308,6 +412,8 @@
       font-size: 12px;
       font-weight: 500;
       color: var(--ink);
+      white-space: pre-line;
+      line-height: 1.4;
     }
 
     .owner-hint-sub {
@@ -317,35 +423,7 @@
     }
 
     .discover-actions {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 52px;
-      padding: 6px 24px calc(16px + var(--safe-bottom));
-      flex-shrink: 0;
-    }
-
-    .action-circle {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      border: 1px solid var(--line-strong);
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .action-circle.like {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--bg);
-    }
-
-    .action-circle svg {
-      width: 22px;
-      height: 22px;
+      display: none;
     }
 
     .overlay {
@@ -549,6 +627,8 @@
 
   <script src="js/match-engine.js"></script>
   <script src="js/profile.js"></script>
+  <script src="js/ms-config.js"></script>
+  <script src="js/ms-api.js"></script>
   <script>
     const userIntent = window.PetSoulProfile.getIntent();
 
@@ -556,6 +636,8 @@
       {
         id: 'bella', mutual: true,
         name: 'Bella', breed: '柯基', persona: 'ENFP · 社交小太陽',
+        personaShort: '社交小太陽', petAge: 2, petGender: '♀',
+        bioLines: ['週末都在氹仔海濱', '想找固定遛狗搭子', '飞盘一丢就疯'],
         distance: '同場 · 現場', intent: '遛狗搭子',
         tags: ['外向', '玩瘋'],
         ownerSoul: { social: 0.88, bond: 0.75, play: 0.8, energy: 0.85 },
@@ -564,12 +646,14 @@
         img: 'https://images.unsplash.com/photo-1619983081563-430f63602796?w=800&q=80',
         ownerImg: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
         clue: 'Bella 說：我媽週末都在氹仔海濱，想找固定遛狗搭子。',
-        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'B媽 · 28 · 設計系',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'B媽 · 28岁 · 女 · 設計\n本科 · 未婚 · 想找固定遛狗搭子',
         ice: '灰色連帽衫 · 測驗區剛見過。',
       },
       {
         id: 'mochi', mutual: false,
         name: 'Mochi', breed: '柴犬', persona: 'INTJ · 傲嬌貴族',
+        personaShort: '傲嬌貴族', petAge: 3, petGender: '♂',
+        bioLines: ['话少但对狗友超真诚', '傍晚才有空', '摸头要先问牠'],
         distance: '同場 · 120m', intent: '都可',
         tags: ['慢熱', '忠犬'],
         ownerSoul: { social: 0.35, bond: 0.55, play: 0.4, energy: 0.38 },
@@ -578,12 +662,14 @@
         img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80',
         ownerImg: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
         clue: 'Mochi 說：我主人話少，但對狗友超真誠。傍晚才有空。',
-        ownerHint: '點 ? 揭曉主人', ownerRevealed: '阿 Ken · 31 · 工程師',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: '阿 Ken · 31岁 · 男 · 工程\n硕士 · 已婚 · 想找慢热慢慢熟',
         ice: '問「Mochi 今日肯唔肯畀摸？」',
       },
       {
         id: 'lucky', mutual: true,
         name: 'Lucky', breed: '黃金獵犬', persona: 'ESFJ · 治癒系',
+        personaShort: '治癒系', petAge: 4, petGender: '♀',
+        bioLines: ['爱慢跑 · 狗公园必到', '需要社交', '温柔但黏人'],
         distance: '同場 · 80m', intent: '都可',
         tags: ['溫柔', '黏人'],
         ownerSoul: { social: 0.72, bond: 0.85, play: 0.65, energy: 0.68 },
@@ -592,7 +678,7 @@
         img: 'https://images.unsplash.com/photo-1558787533-047468894a7f?w=800&q=80',
         ownerImg: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
         clue: 'Lucky 說：我媽愛慢跑，狗公園必到。',
-        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'Cici · 26 · 護士',
+        ownerHint: '點 ? 揭曉主人', ownerRevealed: 'Cici · 26岁 · 女 · 護士\n本科 · 未婚 · 想找周末可约',
         ice: '手機殼有 Lucky 贴纸。',
       },
     ];
@@ -631,20 +717,41 @@
     updatePoolLabel();
 
     function cardHtml(data, idx) {
+      const personaTag = data.personaShort || data.persona.split('·').pop().trim();
+      const bioLines = data.bioLines || (data.bio ? data.bio.split('·').map((s) => s.trim()) : [data.why]);
+      const genderAge = `${data.petGender || ''}${data.petGender ? ' ' : ''}${data.petAge || 2} 岁`.trim();
       return `
         <article class="wing-card ${idx === 1 ? 'is-behind' : ''}">
           <div class="card-surface">
             <div class="pet-hero">
               <img src="${data.img}" alt="${data.name}" draggable="false">
-              <span class="hero-distance">${data.distance}</span>
-              <span class="hero-match">合頻 ${data.score}%</span>
-            </div>
-            <div class="pet-meta">
-              <h1 class="pet-name">${data.name}</h1>
-              <p class="pet-breed">${data.breed} · ${data.persona}</p>
-              <span class="intent-chip">${data.intent}</span>
-              <p class="pet-why">${data.why}</p>
-              <div class="pet-tags">${data.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
+              <div class="hero-gradient"></div>
+              <span class="hero-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                实名 · 头像本宠
+              </span>
+              <span class="hero-match">合频 ${data.score}%</span>
+              <div class="hero-overlay">
+                <h1 class="hero-pet-name">${data.breed}</h1>
+                <p class="hero-pet-sub">${data.name}</p>
+                <div class="hero-pet-bio">
+                  ${bioLines.slice(0, 3).map((line) => `<p class="hero-pet-bio-line">${line}</p>`).join('')}
+                </div>
+                <div class="hero-tags">
+                  <span class="hero-tag is-accent">${genderAge}</span>
+                  <span class="hero-tag">🤝 ${data.intent}</span>
+                  <span class="hero-tag">${personaTag}</span>
+                  <span class="hero-tag is-light">${data.distance}</span>
+                </div>
+              </div>
+              <div class="card-float-actions">
+                <button type="button" class="float-btn float-pass" aria-label="Pass">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <button type="button" class="float-btn like float-like" aria-label="Like">
+                  <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>
+              </div>
             </div>
             <div class="swipe-labels">
               <span class="swipe-label pass">PASS</span>
@@ -717,7 +824,7 @@
       let startY = 0, startOffset = HIDDEN, dragging = false, offset = HIDDEN;
 
       const onDown = (e) => {
-        if (e.target.closest('.owner-avatar')) return;
+        if (e.target.closest('.owner-avatar') || e.target.closest('.float-btn')) return;
         dragging = true;
         startY = e.clientY;
         startOffset = offset;
@@ -761,7 +868,7 @@
       let lastX = 0, lastT = 0, velocity = 0;
 
       const onDown = (e) => {
-        if (e.target.closest('.owner-avatar')) return;
+        if (e.target.closest('.owner-avatar') || e.target.closest('.float-btn')) return;
         dragging = true;
         mode = null;
         startX = e.clientX;
@@ -823,6 +930,14 @@
       bindDrawer(card);
       bindOwnerReveal(card, CARDS[index]);
       bindHorizontalSwipe(card);
+      card.querySelector('.float-pass')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nudgeSwipe(false);
+      });
+      card.querySelector('.float-like')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nudgeSwipe(true);
+      });
     }
 
     function renderStack() {
@@ -870,7 +985,8 @@
         <div class="match-breakdown-row"><span>主人 Soul</span><span>${data.ownerScore}%</span></div>
         <div class="match-breakdown-row"><span>狗玩伴</span><span>${data.dogScore}%</span></div>
       `;
-      document.getElementById('matchIce').textContent = window.PetSoulProfile.iceHintForMatch(data.ice);
+      const iceFallback = window.PetSoulProfile.iceHintForMatch(data.ice);
+      document.getElementById('matchIce').textContent = iceFallback;
       document.getElementById('matchMeta').innerHTML = `
         <span class="chip">${data.distance}</span>
         <span class="chip">${data.intent}</span>
@@ -878,6 +994,32 @@
       `;
       document.getElementById('matchChat').href = `chat.html?match=${data.id}&new=1`;
       overlay.classList.add('is-open');
+
+      const mine = window.PetSoulProfile.load() || {};
+      Promise.all([
+        window.PetSoulMS.matchBlurb({
+          petName: data.name,
+          breed: data.breed,
+          persona: data.persona || '',
+          score: data.score,
+          ownerScore: data.ownerScore,
+          dogScore: data.dogScore,
+          userIntent,
+          theirIntent: data.intent || '都可',
+          fallback: data.copy,
+        }, data.copy),
+        window.PetSoulMS.icebreaker({
+          userPetName: mine.petName || '豆包',
+          theirPetName: data.name,
+          playArea: mine.playArea || data.distance || '同場',
+          userIce: mine.iceHint || '',
+          theirIce: data.ice || '',
+          fallback: iceFallback,
+        }, iceFallback),
+      ]).then(([blurb, ice]) => {
+        if (blurb.ai) document.getElementById('matchCopy').textContent = blurb.text;
+        if (ice.ai) document.getElementById('matchIce').textContent = ice.text;
+      });
     }
 
     function showPending(data) {

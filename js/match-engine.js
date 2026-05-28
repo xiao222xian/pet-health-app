@@ -35,6 +35,7 @@ window.PetSoulMatch = {
 
   BREED_SIZE: {
     '柯基': 'small', '柴犬': 'small', '黃金獵犬': 'large', '混種': 'medium',
+    '英短': 'medium', '布偶': 'large', '暹羅': 'medium',
   },
 
   DEFAULT_USER: {
