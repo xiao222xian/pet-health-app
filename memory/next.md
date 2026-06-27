@@ -4,7 +4,7 @@ Last updated: 2026-06-27 10:10 CST
 
 ## Exact Next Step
 
-Review the freshly organized git commits, then run one manual simulator pass of the rebuilt AI consult UX:
+Push the freshly organized commits when ready, then run one manual simulator pass of the rebuilt AI consult UX:
 
 - `hi` should render a guide/follow-up card, not a medical diagnosis card.
 - A vague symptom such as `狗狗吐了` should ask for missing information.
@@ -65,6 +65,7 @@ ssh root@103.189.141.67 'systemctl status pet-backend; journalctl -u pet-backend
 - Inspected worktree and avoided broad staging.
 - Updated project memory and stale deployment notes.
 - Planned grouped commits for docs/memory, backend consult/auth/pets, Flutter app consult/auth/pet flow, and optional ecosystem prototypes/materials.
+- Created grouped commits for safe project changes and left local-only/large/reference assets unstaged.
 - Secret/build/dependency exclusions remain mandatory before every staging pass.
 
 ## Server Snapshot
