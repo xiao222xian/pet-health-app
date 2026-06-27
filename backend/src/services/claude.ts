@@ -2,18 +2,24 @@ import OpenAI from 'openai';
 import { ConsultResponse, NutritionResponse } from '../types/index.js';
 
 const openRouterClient = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY || 'missing-key',
   baseURL: 'https://openrouter.ai/api/v1',
 });
 
 const groqClient = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: process.env.GROQ_API_KEY || 'missing-key',
   baseURL: 'https://api.groq.com/openai/v1',
+});
+
+const fluClient = new OpenAI({
+  apiKey: process.env.FLU_API_KEY || 'missing-key',
+  baseURL: process.env.FLU_BASE_URL ?? 'https://new.fluapi.com/v1',
 });
 
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'google/gemini-2.0-flash-001';
 const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant';
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-flash-latest';
+const FLU_MODEL = process.env.FLU_MODEL ?? 'gpt-5.5';
 const DISCLAIMER = '本结果仅供参考，不构成兽医诊断意见。如有紧急情况请立即就医。';
 
 function extractJson(text: string): unknown {
@@ -169,47 +175,69 @@ export async function consultSymptoms(
 
   let text = '';
   try {
-    const geminiPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}\n\n请像宠物分诊助手一样回答，并严格输出 JSON。`;
-    text = await callGemini(geminiPrompt, systemPrompt, photoData);
+    if (!process.env.FLU_API_KEY) {
+      throw new Error('Missing FLU_API_KEY');
+    }
+    const response = await fluClient.chat.completions.create({
+      model: FLU_MODEL,
+      temperature: 0.3,
+      max_tokens: 1100,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: multimodalContent,
+        },
+      ],
+    });
+    text = response.choices[0]?.message?.content ?? '';
   } catch (error) {
     try {
-      if (!process.env.OPENROUTER_API_KEY) {
-        throw error;
-      }
-      const fallbackResponse = await openRouterClient.chat.completions.create({
-        model: OPENROUTER_MODEL,
-        temperature: 0.3,
-        max_tokens: 1100,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: multimodalContent,
-          },
-        ],
-      });
-      text = fallbackResponse.choices[0]?.message?.content ?? '';
+      const geminiPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}\n\n请像宠物分诊助手一样回答，并严格输出 JSON。`;
+      text = await callGemini(geminiPrompt, systemPrompt, photoData);
     } catch {
-      const textOnlyPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}${photoData.length > 0 ? '\n\n补充：主人还上传了宠物照片，但当前后备模型只能基于文字分析。' : ''}`;
-      const fallbackResponse = await groqClient.chat.completions.create({
-        model: GROQ_MODEL,
-        temperature: 0.3,
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: textOnlyPrompt,
-          },
-        ],
-      });
-      text = fallbackResponse.choices[0]?.message?.content ?? '';
+      try {
+        if (!process.env.OPENROUTER_API_KEY) {
+          throw error;
+        }
+        const fallbackResponse = await openRouterClient.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          temperature: 0.3,
+          max_tokens: 1100,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: multimodalContent,
+            },
+          ],
+        });
+        text = fallbackResponse.choices[0]?.message?.content ?? '';
+      } catch {
+        const textOnlyPrompt = `${buildPetSummary(petInfo)}\n\n主人描述：${symptoms}${photoData.length > 0 ? '\n\n补充：主人还上传了宠物照片，但当前后备模型只能基于文字分析。' : ''}`;
+        const fallbackResponse = await groqClient.chat.completions.create({
+          model: GROQ_MODEL,
+          temperature: 0.3,
+          max_tokens: 1000,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: textOnlyPrompt,
+            },
+          ],
+        });
+        text = fallbackResponse.choices[0]?.message?.content ?? '';
+      }
     }
   }
 
@@ -230,30 +258,43 @@ export async function getNutritionAdvice(petInfo: {
 
   let text = '';
   try {
-    const response = await openRouterClient.chat.completions.create({
-      model: OPENROUTER_MODEL,
+    if (!process.env.FLU_API_KEY) {
+      throw new Error('Missing FLU_API_KEY');
+    }
+    const response = await fluClient.chat.completions.create({
+      model: FLU_MODEL,
       temperature: 0.2,
       max_tokens: 700,
       messages,
     });
     text = response.choices[0]?.message?.content ?? '';
-  } catch (error) {
+  } catch {
     try {
-      if (!process.env.GROQ_API_KEY) {
-        throw error;
-      }
-      const fallbackResponse = await groqClient.chat.completions.create({
-        model: GROQ_MODEL,
+      const response = await openRouterClient.chat.completions.create({
+        model: OPENROUTER_MODEL,
         temperature: 0.2,
         max_tokens: 700,
         messages,
       });
-      text = fallbackResponse.choices[0]?.message?.content ?? '';
-    } catch {
-      text = await callGemini(
-        `为宠物${petInfo.name}（${petInfo.species}，${petInfo.age_years ?? '未知'}岁，${petInfo.weight_kg ?? '未知'}kg，${petInfo.neutered ? '已绝育' : '未绝育'}）提供营养建议，严格JSON格式返回：{"daily_calories":number,"protein_ratio":number,"recommendations":["string"],"foods_to_avoid":["string"]}`,
-        '你是宠物营养顾问。严格返回 JSON，不要有任何额外说明。',
-      );
+      text = response.choices[0]?.message?.content ?? '';
+    } catch (error) {
+      try {
+        if (!process.env.GROQ_API_KEY) {
+          throw error;
+        }
+        const fallbackResponse = await groqClient.chat.completions.create({
+          model: GROQ_MODEL,
+          temperature: 0.2,
+          max_tokens: 700,
+          messages,
+        });
+        text = fallbackResponse.choices[0]?.message?.content ?? '';
+      } catch {
+        text = await callGemini(
+          `为宠物${petInfo.name}（${petInfo.species}，${petInfo.age_years ?? '未知'}岁，${petInfo.weight_kg ?? '未知'}kg，${petInfo.neutered ? '已绝育' : '未绝育'}）提供营养建议，严格JSON格式返回：{"daily_calories":number,"protein_ratio":number,"recommendations":["string"],"foods_to_avoid":["string"]}`,
+          '你是宠物营养顾问。严格返回 JSON，不要有任何额外说明。',
+        );
+      }
     }
   }
   return extractJson(text) as NutritionResponse;
