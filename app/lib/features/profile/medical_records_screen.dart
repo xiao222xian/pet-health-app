@@ -219,7 +219,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             decoration: BoxDecoration(
-              color: cfg.color.withOpacity(0.06),
+              color: cfg.color.withValues(alpha: 0.06),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(18)),
             ),
@@ -228,7 +228,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                      color: cfg.color.withOpacity(0.15),
+                      color: cfg.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text(cfg.emoji, style: const TextStyle(fontSize: 11)),
@@ -272,9 +272,9 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                       color: isOverdue
-                          ? AppTheme.danger.withOpacity(0.08)
+                          ? AppTheme.danger.withValues(alpha: 0.08)
                           : isDueSoon
-                              ? AppTheme.warning.withOpacity(0.08)
+                              ? AppTheme.warning.withValues(alpha: 0.08)
                               : AppTheme.primarySoft,
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -317,15 +317,15 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
   _TypeCfg _typeCfg(String type) {
     switch (type) {
       case 'vaccine':
-        return _TypeCfg('💉', '疫苗', AppTheme.primary);
+        return const _TypeCfg('💉', '疫苗', AppTheme.primary);
       case 'checkup':
-        return _TypeCfg('🔬', '体检', const Color(0xFF26A69A));
+        return const _TypeCfg('🔬', '体检', Color(0xFF26A69A));
       case 'deworming':
-        return _TypeCfg('💊', '驱虫', const Color(0xFF7E57C2));
+        return const _TypeCfg('💊', '驱虫', Color(0xFF7E57C2));
       case 'surgery':
-        return _TypeCfg('🏥', '手术', AppTheme.danger);
+        return const _TypeCfg('🏥', '手术', AppTheme.danger);
       default:
-        return _TypeCfg('📋', '其他', AppTheme.textSecondary);
+        return const _TypeCfg('📋', '其他', AppTheme.textSecondary);
     }
   }
 }
@@ -657,7 +657,9 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                            color: sel ? color.withOpacity(0.1) : Colors.white,
+                            color: sel
+                                ? color.withValues(alpha: 0.1)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                                 color: sel ? color : AppTheme.divider,
@@ -665,7 +667,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                             boxShadow: sel
                                 ? [
                                     BoxShadow(
-                                        color: color.withOpacity(0.2),
+                                        color: color.withValues(alpha: 0.2),
                                         blurRadius: 10,
                                         offset: const Offset(0, 3))
                                   ]
@@ -688,7 +690,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
           if (_type != 'deworming') ...[
             _label(_titleLabel),
             const SizedBox(height: 8),
-            _textField(_titleCtrl, '输入${_titleLabel}',
+            _textField(_titleCtrl, '输入$_titleLabel',
                 onChanged: (_) => setState(() {})),
             const SizedBox(height: 16),
           ],
@@ -755,7 +757,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                                 color: AppTheme.primary,
                                 size: 16)),
                         const SizedBox(width: 12),
-                        Text('设置${_nextDueLabel}',
+                        Text('设置$_nextDueLabel',
                             style: const TextStyle(
                                 fontSize: 14, color: AppTheme.textHint)),
                         const Spacer(),
@@ -1026,15 +1028,15 @@ class _RecordDetailSheet extends StatelessWidget {
   _TypeCfg _typeCfg(String type) {
     switch (type) {
       case 'vaccine':
-        return _TypeCfg('💉', '疫苗', AppTheme.primary);
+        return const _TypeCfg('💉', '疫苗', AppTheme.primary);
       case 'checkup':
-        return _TypeCfg('🔬', '体检', const Color(0xFF26A69A));
+        return const _TypeCfg('🔬', '体检', Color(0xFF26A69A));
       case 'deworming':
-        return _TypeCfg('💊', '驱虫', const Color(0xFF7E57C2));
+        return const _TypeCfg('💊', '驱虫', Color(0xFF7E57C2));
       case 'surgery':
-        return _TypeCfg('🏥', '手术', AppTheme.danger);
+        return const _TypeCfg('🏥', '手术', AppTheme.danger);
       default:
-        return _TypeCfg('📋', '其他', AppTheme.textSecondary);
+        return const _TypeCfg('📋', '其他', AppTheme.textSecondary);
     }
   }
 
@@ -1065,7 +1067,7 @@ class _RecordDetailSheet extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                    color: cfg.color.withOpacity(0.12),
+                    color: cfg.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text(cfg.emoji, style: const TextStyle(fontSize: 13)),
@@ -1142,7 +1144,7 @@ class _RecordDetailSheet extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                   color: isOverdue
-                      ? AppTheme.danger.withOpacity(0.07)
+                      ? AppTheme.danger.withValues(alpha: 0.07)
                       : AppTheme.primarySoft,
                   borderRadius: BorderRadius.circular(14)),
               child: Row(children: [
@@ -1176,10 +1178,10 @@ class _RecordDetailSheet extends StatelessWidget {
               child: Container(
                 height: 50,
                 decoration: BoxDecoration(
-                    color: AppTheme.danger.withOpacity(0.08),
+                    color: AppTheme.danger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: AppTheme.danger.withOpacity(0.2))),
+                    border: Border.all(
+                        color: AppTheme.danger.withValues(alpha: 0.2))),
                 child: const Center(
                     child: Text('删除',
                         style: TextStyle(

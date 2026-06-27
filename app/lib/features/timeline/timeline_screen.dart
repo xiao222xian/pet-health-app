@@ -268,7 +268,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                   boxShadow: sel
                       ? [
                           BoxShadow(
-                              color: color.withOpacity(0.3),
+                              color: color.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2))
                         ]
@@ -362,7 +362,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                   margin: const EdgeInsets.only(left: 10),
                   decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [
-                    AppTheme.primary.withOpacity(0.3),
+                    AppTheme.primary.withValues(alpha: 0.3),
                     Colors.transparent
                   ])))),
         ]),
@@ -419,7 +419,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                 width: 50 + p * 8,
                 height: 50 + p * 8,
                 decoration: BoxDecoration(
-                    color: cfg.color.withOpacity(0.12 + p * 0.06),
+                    color: cfg.color.withValues(alpha: 0.12 + p * 0.06),
                     shape: BoxShape.circle)),
             _dot(cfg, 40),
           ]);
@@ -434,13 +434,13 @@ class _TimelineScreenState extends State<TimelineScreen>
       height: size,
       decoration: BoxDecoration(
           gradient: LinearGradient(
-              colors: [cfg.color.withOpacity(0.85), cfg.color],
+              colors: [cfg.color.withValues(alpha: 0.85), cfg.color],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-                color: cfg.color.withOpacity(0.45),
+                color: cfg.color.withValues(alpha: 0.45),
                 blurRadius: 12,
                 offset: const Offset(0, 4))
           ]),
@@ -453,7 +453,7 @@ class _TimelineScreenState extends State<TimelineScreen>
         borderRadius: BorderRadius.circular(18),
         boxShadow: AppTheme.cardShadow,
         border: isFirst
-            ? Border.all(color: cfg.color.withOpacity(0.3), width: 1.5)
+            ? Border.all(color: cfg.color.withValues(alpha: 0.3), width: 1.5)
             : null,
       ),
       clipBehavior: Clip.hardEdge,
@@ -462,16 +462,16 @@ class _TimelineScreenState extends State<TimelineScreen>
         Container(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: [cfg.color.withOpacity(0.1), Colors.transparent],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight)),
+                gradient: LinearGradient(colors: [
+              cfg.color.withValues(alpha: 0.1),
+              Colors.transparent
+            ], begin: Alignment.centerLeft, end: Alignment.centerRight)),
             child: Row(children: [
               Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                      color: cfg.color.withOpacity(0.12),
+                      color: cfg.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(cfg.icon, size: 9, color: cfg.color),
@@ -560,7 +560,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                     height: 3,
                     margin: const EdgeInsets.only(right: 7, top: 1),
                     decoration: BoxDecoration(
-                        color: cfg.color.withOpacity(0.5),
+                        color: cfg.color.withValues(alpha: 0.5),
                         shape: BoxShape.circle)),
                 Expanded(
                     child: Text(l,
@@ -602,7 +602,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                         Container(
                           width: 68,
                           height: 68,
-                          color: Colors.black.withOpacity(0.35),
+                          color: Colors.black.withValues(alpha: 0.35),
                           alignment: Alignment.center,
                           child: Text(
                             '+${event.photoUrls.length - 4}',
@@ -623,7 +623,7 @@ class _TimelineScreenState extends State<TimelineScreen>
               '点击卡片查看图片详情',
               style: TextStyle(
                 fontSize: 11,
-                color: cfg.color.withOpacity(0.8),
+                color: cfg.color.withValues(alpha: 0.8),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -659,18 +659,19 @@ class _TimelineScreenState extends State<TimelineScreen>
   _TypeConfig _typeConfig(String type) {
     switch (type) {
       case 'growth':
-        return _TypeConfig(
-            CupertinoIcons.heart_circle_fill, const Color(0xFF4CAF50), '成长点滴');
+        return const _TypeConfig(
+            CupertinoIcons.heart_circle_fill, Color(0xFF4CAF50), '成长点滴');
       case 'medical':
-        return _TypeConfig(CupertinoIcons.heart_fill, AppTheme.danger, '医疗');
+        return const _TypeConfig(
+            CupertinoIcons.heart_fill, AppTheme.danger, '医疗');
       case 'weight':
-        return _TypeConfig(
+        return const _TypeConfig(
             CupertinoIcons.chart_bar_fill, AppTheme.primaryLight, '体重');
       case 'photo':
-        return _TypeConfig(
-            CupertinoIcons.photo_fill, const Color(0xFF7E57C2), '照片');
+        return const _TypeConfig(
+            CupertinoIcons.photo_fill, Color(0xFF7E57C2), '照片');
       default:
-        return _TypeConfig(CupertinoIcons.star_fill, AppTheme.primary,
+        return const _TypeConfig(CupertinoIcons.star_fill, AppTheme.primary,
             '里程碑'); // 'note' = milestone
     }
   }
@@ -736,7 +737,10 @@ class _CurvePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
       ..shader = LinearGradient(
-        colors: [fromColor.withOpacity(0.2), toColor.withOpacity(0.2)],
+        colors: [
+          fromColor.withValues(alpha: 0.2),
+          toColor.withValues(alpha: 0.2)
+        ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -800,7 +804,7 @@ class _TimelineDetailSheet extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: cfg.color.withOpacity(0.12),
+                    color: cfg.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -960,7 +964,7 @@ class _TimelineGalleryViewerState extends State<_TimelineGalleryViewer> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: Colors.black.withOpacity(0.92),
+      backgroundColor: Colors.black.withValues(alpha: 0.92),
       child: Stack(
         children: [
           PageView.builder(
@@ -989,7 +993,7 @@ class _TimelineGalleryViewerState extends State<_TimelineGalleryViewer> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.14),
+                        color: Colors.white.withValues(alpha: 0.14),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

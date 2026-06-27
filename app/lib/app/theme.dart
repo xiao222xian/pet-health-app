@@ -50,41 +50,41 @@ class AppTheme {
 
   // ── CupertinoTheme ───────────────────────────────
   static CupertinoThemeData get theme => const CupertinoThemeData(
-    primaryColor: primary,
-    scaffoldBackgroundColor: background,
-    barBackgroundColor: card,
-    textTheme: CupertinoTextThemeData(
-      primaryColor: primary,
-      textStyle: TextStyle(color: textPrimary, fontSize: 16),
-      navTitleTextStyle: TextStyle(
-        color: textPrimary,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.3,
-      ),
-      navLargeTitleTextStyle: TextStyle(
-        color: deepBlue,
-        fontSize: 34,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.5,
-      ),
-    ),
-  );
+        primaryColor: primary,
+        scaffoldBackgroundColor: background,
+        barBackgroundColor: card,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: primary,
+          textStyle: TextStyle(color: textPrimary, fontSize: 16),
+          navTitleTextStyle: TextStyle(
+            color: textPrimary,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+          navLargeTitleTextStyle: TextStyle(
+            color: deepBlue,
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+        ),
+      );
 
   // ── 阴影 ─────────────────────────────────────────
   static List<BoxShadow> get cardShadow => [
-    BoxShadow(
-      color: const Color(0xFF6B5ECD).withOpacity(0.08),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
-    ),
-  ];
+        BoxShadow(
+          color: const Color(0xFF6B5ECD).withValues(alpha: 0.08),
+          blurRadius: 16,
+          offset: const Offset(0, 4),
+        ),
+      ];
 
   static List<BoxShadow> get cardShadowStrong => [
-    BoxShadow(
-      color: primary.withOpacity(0.28),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
+        BoxShadow(
+          color: primary.withValues(alpha: 0.28),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ];
 }

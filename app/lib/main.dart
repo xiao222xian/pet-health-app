@@ -7,9 +7,19 @@ import 'app/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://aktmdyxeqcmaldbylzfi.supabase.co',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrdG1keXhlcWNtYWxkYnlsemZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MzYwNzksImV4cCI6MjA5NTQxMjA3OX0.hiSkMayvK7tF4A-bDSjiTsIPGxtbzML16jX0amilPUk',
+  );
+
   await Supabase.initialize(
-    url: 'https://srljyvqojhhwbgtdojkh.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNybGp5dnFvamhod2JndGRvamtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NjA1MTUsImV4cCI6MjA5MDQzNjUxNX0.WqF_9rHWFhzQf84KyLB9qP3ZE6GkPXnKuQ3V3IUaZaE',
+    url: supabaseUrl,
+    publishableKey: supabaseAnonKey,
   );
 
   runApp(const PetHealthApp());

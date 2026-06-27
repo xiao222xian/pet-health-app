@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../shared/services/supabase_service.dart';
+import '../../shared/services/api_service.dart';
 import '../../shared/models/pet.dart';
 import '../../shared/widgets/loading_overlay.dart';
 import '../../app/theme.dart';
@@ -183,8 +184,9 @@ class _PetFormScreenState extends State<PetFormScreen> {
             ? _customBreedController.text.trim()
             : null)
         : _breed;
-    if (effectiveBreed != null && effectiveBreed.isNotEmpty)
+    if (effectiveBreed != null && effectiveBreed.isNotEmpty) {
       payload['breed'] = effectiveBreed;
+    }
     if (_weightController.text.isNotEmpty) {
       payload['weight_kg'] = double.tryParse(_weightController.text);
     }
@@ -212,12 +214,15 @@ class _PetFormScreenState extends State<PetFormScreen> {
             .update(payload)
             .eq('id', _existing!.id);
       } else {
-        await SupabaseService.client.from('pets').insert(payload);
+        payload.remove('user_id');
+        await ApiService.post('/pets', payload);
       }
       SupabaseService.notifyDataChanged();
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) _showError(e.toString());
+      if (mounted) {
+        _showError(e is ApiException ? e.message : e.toString());
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -239,8 +244,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
 
   // ── 品种选择 ──────────────────────────────────────────
   void _pickBreed() {
-    final dogs = _dogBreeds;
-    final cats = _catBreeds;
+    const dogs = _dogBreeds;
+    const cats = _catBreeds;
     final all = <String, List<String>>{'🐶 狗狗': dogs, '🐱 猫咪': cats};
 
     showCupertinoModalPopup<void>(
@@ -308,7 +313,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                                 color: _breed == breed
                                     ? AppTheme.primarySoft
                                     : Colors.transparent,
-                                border: Border(
+                                border: const Border(
                                     bottom: BorderSide(
                                         color: AppTheme.divider, width: 0.5)),
                               ),
@@ -551,8 +556,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.background,
                       borderRadius: BorderRadius.circular(10),
-                      border:
-                          Border.all(color: AppTheme.primary.withOpacity(0.4)),
+                      border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.4)),
                     ),
                   ),
                 ],
@@ -584,12 +589,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
                             fontSize: 15, color: AppTheme.textPrimary)),
                     CupertinoSwitch(
                       value: _neutered,
-                      activeColor: AppTheme.primary,
+                      activeTrackColor: AppTheme.primary,
                       onChanged: (v) => setState(() => _neutered = v),
                     ),
                   ],
                 ),
-                Divider(color: AppTheme.divider, height: 20),
+                const Divider(color: AppTheme.divider, height: 20),
                 _label('体重 (kg)'),
                 CupertinoTextField(
                   controller: _weightController,

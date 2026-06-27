@@ -47,13 +47,16 @@ class ConsultScreen extends StatefulWidget {
 class _ConsultScreenState extends State<ConsultScreen> {
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _inputFocus = FocusNode();
 
   bool _disclaimerAccepted = false;
   final List<_Msg> _msgs = [];
   final List<File> _pendingPhotos = [];
   bool _thinking = false;
+  String _thinkingText = '正在分析...';
   bool _ended = false;
   Map<String, dynamic>? _finalAdvice;
+  String? _sessionId;
 
   String? _petId, _petName, _petSpecies;
   List<Map<String, dynamic>> _allPets = [];
@@ -70,12 +73,21 @@ class _ConsultScreenState extends State<ConsultScreen> {
   void dispose() {
     SupabaseService.dataVersion.removeListener(_handleDataChanged);
     _inputCtrl.dispose();
+    _inputFocus.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   void _handleDataChanged() {
     if (mounted) _loadPets();
+  }
+
+  void _usePrompt(String text) {
+    if (_ended || _petId == null) return;
+    _inputCtrl.text = text;
+    _inputCtrl.selection = TextSelection.collapsed(offset: text.length);
+    _inputFocus.requestFocus();
+    setState(() {});
   }
 
   // ── Data ──────────────────────────────────────────────
@@ -125,8 +137,10 @@ class _ConsultScreenState extends State<ConsultScreen> {
       _msgs.clear();
       _pendingPhotos.clear();
       _thinking = false;
+      _thinkingText = '正在分析...';
       _ended = false;
       _finalAdvice = null;
+      _sessionId = null;
       _inputCtrl.clear();
     });
   }
@@ -175,7 +189,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
                     color: sel ? AppTheme.primarySoft : Colors.transparent,
-                    border: Border(
+                    border: const Border(
                         bottom:
                             BorderSide(color: AppTheme.divider, width: 0.5))),
                 child: Row(children: [
@@ -212,26 +226,50 @@ class _ConsultScreenState extends State<ConsultScreen> {
       _pendingPhotos.clear();
       _inputCtrl.clear();
       _thinking = true;
+      _thinkingText = '正在建立问诊状态...';
     });
     _scrollToBottom();
 
     try {
       final photos64 = await Future.wait(
           photos.map((f) async => base64Encode(await f.readAsBytes())));
-
-      final history = _conversationHistory();
-      final prompt = '${history}主人这次补充：$text';
-
-      final res = await ApiService.post('/consult', {
+      final body = {
         'pet_id': _petId,
-        'symptoms': prompt,
+        'symptoms': text,
+        if (_sessionId != null) 'session_id': _sessionId,
         if (photos64.isNotEmpty) 'photo_data': photos64,
-      });
+      };
+
+      Map<String, dynamic> res;
+      try {
+        res = await ApiService.postStream(
+          '/consult/stream',
+          body,
+          onEvent: (event, data) {
+            if (!mounted) return;
+            if (event == 'state') {
+              final state = data['state'] as String? ?? '';
+              setState(() => _thinkingText = _stateLabel(state));
+              _scrollToBottom();
+            } else if (event == 'token') {
+              final token = data['text'] as String?;
+              if (token != null && token.trim().isNotEmpty) {
+                setState(() => _thinkingText = token.trim());
+                _scrollToBottom();
+              }
+            }
+          },
+        );
+      } catch (_) {
+        res = await ApiService.post('/consult', body);
+      }
 
       if (mounted) {
         setState(() {
+          _sessionId = res['session_id'] as String? ?? _sessionId;
           _msgs.add(_Msg(isUser: false, text: '', consultData: res));
           _thinking = false;
+          _thinkingText = '正在分析...';
         });
         _scrollToBottom();
       }
@@ -241,16 +279,27 @@ class _ConsultScreenState extends State<ConsultScreen> {
         setState(() {
           _msgs.add(_Msg(isUser: false, text: '抱歉，出现了问题：$msg'));
           _thinking = false;
+          _thinkingText = '正在分析...';
         });
       }
     }
   }
 
-  String _conversationHistory() {
-    if (_msgs.isEmpty) return '';
-    final lines =
-        _msgs.map((m) => '${m.isUser ? "主人" : "助手"}：${m.text}').join('\n');
-    return '【此前对话记录】\n$lines\n\n';
+  String _stateLabel(String state) {
+    switch (state) {
+      case 'LOAD_CONTEXT':
+        return '正在读取宠物资料...';
+      case 'SCAN_RISK_RULES':
+        return '正在排查急症风险...';
+      case 'CLASSIFY_INTENT':
+        return '正在判断是否具备分诊信息...';
+      case 'GENERATE_TRIAGE':
+        return '正在生成分诊建议...';
+      case 'VALIDATE_RESPONSE':
+        return '正在校验建议内容...';
+      default:
+        return '正在分析...';
+    }
   }
 
   Future<void> _endSession() async {
@@ -279,13 +328,12 @@ class _ConsultScreenState extends State<ConsultScreen> {
     setState(() {
       _ended = true;
       _thinking = true;
+      _thinkingText = '正在整理本次问诊...';
     });
     _scrollToBottom();
 
     try {
-      final fullHistory = _msgs
-          .map((m) => '${m.isUser ? "主人" : "AI助手"}：${m.text}')
-          .join('\n\n');
+      final fullHistory = _msgs.map(_messageTranscript).join('\n\n');
 
       final prompt = '以下是本次完整问诊对话，请基于全部信息给出一份更完整、更稳妥的综合分诊建议。\n\n'
           '完整问诊记录：\n$fullHistory';
@@ -293,12 +341,14 @@ class _ConsultScreenState extends State<ConsultScreen> {
       final res = await ApiService.post('/consult', {
         'pet_id': _petId,
         'symptoms': prompt,
+        if (_sessionId != null) 'session_id': _sessionId,
       });
 
       if (mounted) {
         setState(() {
           _finalAdvice = res;
           _thinking = false;
+          _thinkingText = '正在分析...';
         });
         _scrollToBottom();
       }
@@ -307,10 +357,26 @@ class _ConsultScreenState extends State<ConsultScreen> {
         setState(() {
           _ended = false;
           _thinking = false;
+          _thinkingText = '正在分析...';
           _msgs.add(const _Msg(isUser: false, text: '生成综合建议时出现问题，请稍后再试'));
         });
       }
     }
+  }
+
+  String _messageTranscript(_Msg message) {
+    if (message.isUser) return '主人：${message.text}';
+    final data = message.consultData;
+    if (data == null) return 'AI助手：${message.text}';
+    final parts = <String>[
+      data['title']?.toString() ?? '',
+      data['short_answer']?.toString() ?? '',
+      data['summary']?.toString() ?? '',
+      ..._stringList(data['home_care']).map((item) => '护理建议：$item'),
+      ..._questionList(data['follow_up_questions']).map((item) => '追问：$item'),
+      ..._nextActionList(data['next_actions']).map((item) => '下一步：$item'),
+    ].where((item) => item.trim().isNotEmpty).toList();
+    return 'AI助手：${parts.join('；')}';
   }
 
   Future<void> _pickPhoto() async {
@@ -391,7 +457,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.12),
+                        color: AppTheme.primary.withValues(alpha: 0.12),
                         blurRadius: 32,
                         offset: const Offset(0, 8))
                   ],
@@ -403,7 +469,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                         height: 100,
                         decoration: BoxDecoration(
                             gradient: RadialGradient(colors: [
-                              AppTheme.primary.withOpacity(0.18),
+                              AppTheme.primary.withValues(alpha: 0.18),
                               Colors.transparent
                             ]),
                             shape: BoxShape.circle)),
@@ -438,7 +504,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                         borderRadius: BorderRadius.circular(26),
                         boxShadow: [
                           BoxShadow(
-                              color: AppTheme.primary.withOpacity(0.35),
+                              color: AppTheme.primary.withValues(alpha: 0.35),
                               blurRadius: 16,
                               offset: const Offset(0, 6))
                         ],
@@ -581,7 +647,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                      color: const Color(0xFF26C6DA).withOpacity(0.4),
+                      color: const Color(0xFF26C6DA).withValues(alpha: 0.4),
                       blurRadius: 10,
                       offset: const Offset(0, 3))
                 ],
@@ -638,7 +704,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       children: [
         ..._msgs.map((m) => m.isUser ? _buildUserBubble(m) : _buildAiBubble(m)),
-        if (_thinking) const _ThinkingBubble(),
+        if (_thinking) _ThinkingBubble(text: _thinkingText),
         if (_finalAdvice != null && !_thinking)
           _buildFinalAdvice(_finalAdvice!),
         const SizedBox(height: 4),
@@ -662,12 +728,12 @@ class _ConsultScreenState extends State<ConsultScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     ...AppTheme.cardShadow,
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.08),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
@@ -679,7 +745,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                     Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _AiAvatar(),
+                          const _AiAvatar(),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -688,7 +754,9 @@ class _ConsultScreenState extends State<ConsultScreen> {
                                 Text(
                                   _petName != null
                                       ? 'Hi！我是「$_petName」的问诊助手'
-                                      : 'Hi！我是你的宠物问诊助手',
+                                      : _petId == null
+                                          ? '先添加宠物档案'
+                                          : 'Hi！我是你的宠物问诊助手',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w800,
@@ -697,7 +765,9 @@ class _ConsultScreenState extends State<ConsultScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '把症状、持续时间、食欲精神和排便情况告诉我，我会先帮你梳理风险，再给你下一步建议。',
+                                  _petId == null
+                                      ? '问诊需要先选择一只宠物，这样我才能结合物种、年龄、体重和历史记录判断风险。'
+                                      : '把症状、持续时间、食欲精神和排便情况告诉我，我会先帮你梳理风险，再给你下一步建议。',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey.shade600,
@@ -715,13 +785,13 @@ class _ConsultScreenState extends State<ConsultScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primarySoft.withOpacity(0.9),
+                            AppTheme.primarySoft.withValues(alpha: 0.9),
                             Colors.white,
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(children: const [
+                      child: const Row(children: [
                         Icon(CupertinoIcons.sparkles,
                             size: 15, color: AppTheme.primary),
                         SizedBox(width: 8),
@@ -766,7 +836,8 @@ class _ConsultScreenState extends State<ConsultScreen> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: AppTheme.primary.withOpacity(0.18)),
+                                  color:
+                                      AppTheme.primary.withValues(alpha: 0.18)),
                               boxShadow: AppTheme.cardShadow,
                             ),
                             child: Row(
@@ -848,7 +919,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
                       bottomRight: Radius.circular(4)),
                   boxShadow: [
                     BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.3),
+                        color: AppTheme.primary.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4))
                   ],
@@ -863,7 +934,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
           Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                   gradient: AppTheme.primaryGradient, shape: BoxShape.circle),
               child: const Center(
                   child: Text('😊', style: TextStyle(fontSize: 16)))),
@@ -876,11 +947,14 @@ class _ConsultScreenState extends State<ConsultScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        _AiAvatar(),
+        const _AiAvatar(),
         const SizedBox(width: 8),
         Flexible(
           child: msg.consultData != null
-              ? _ConsultStructuredCard(response: msg.consultData!)
+              ? ConsultStructuredCard(
+                  response: msg.consultData!,
+                  onPromptSelected: _usePrompt,
+                )
               : Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -911,7 +985,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-              color: const Color(0xFF26C6DA).withOpacity(0.1),
+              color: const Color(0xFF26C6DA).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10)),
           child: const Row(children: [
             Icon(CupertinoIcons.checkmark_seal_fill,
@@ -925,7 +999,7 @@ class _ConsultScreenState extends State<ConsultScreen> {
           ]),
         ),
         const SizedBox(height: 10),
-        _ConsultStructuredCard(
+        ConsultStructuredCard(
           response: res,
           showDisclaimer: true,
           emphasizeRisk: true,
@@ -945,10 +1019,11 @@ class _ConsultScreenState extends State<ConsultScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: AppTheme.divider, width: 0.5)),
+        border:
+            const Border(top: BorderSide(color: AppTheme.divider, width: 0.5)),
         boxShadow: [
           BoxShadow(
-              color: AppTheme.primary.withOpacity(0.06),
+              color: AppTheme.primary.withValues(alpha: 0.06),
               blurRadius: 16,
               offset: const Offset(0, -4))
         ],
@@ -1014,8 +1089,13 @@ class _ConsultScreenState extends State<ConsultScreen> {
                       border: Border.all(color: const Color(0xFFE0DBF0))),
                   child: CupertinoTextField(
                     controller: _inputCtrl,
-                    placeholder: _ended ? '问诊已结束' : '描述你家宠物的症状...',
-                    enabled: !_ended,
+                    focusNode: _inputFocus,
+                    placeholder: _ended
+                        ? '问诊已结束'
+                        : _petId == null
+                            ? '请先添加或选择宠物档案'
+                            : '描述你家宠物的症状...',
+                    enabled: !_ended && _petId != null,
                     maxLines: 4,
                     minLines: 1,
                     padding: const EdgeInsets.symmetric(
@@ -1043,7 +1123,8 @@ class _ConsultScreenState extends State<ConsultScreen> {
                       boxShadow: canSend
                           ? [
                               BoxShadow(
-                                  color: AppTheme.primary.withOpacity(0.4),
+                                  color:
+                                      AppTheme.primary.withValues(alpha: 0.4),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3))
                             ]
@@ -1065,9 +1146,10 @@ class _ConsultScreenState extends State<ConsultScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                       border: Border.all(
-                          color: const Color(0xFF26C6DA).withOpacity(0.5)),
+                          color:
+                              const Color(0xFF26C6DA).withValues(alpha: 0.5)),
                       borderRadius: BorderRadius.circular(12),
-                      color: const Color(0xFF26C6DA).withOpacity(0.06)),
+                      color: const Color(0xFF26C6DA).withValues(alpha: 0.06)),
                   child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1109,17 +1191,17 @@ class _AiAvatar extends StatelessWidget {
 _RiskCfg _riskCfg(String risk) {
   switch (risk) {
     case 'emergency':
-      return _RiskCfg(AppTheme.danger,
+      return const _RiskCfg(AppTheme.danger,
           CupertinoIcons.exclamationmark_triangle_fill, '🚨 紧急，建议立即就医');
     case 'high':
-      return _RiskCfg(const Color(0xFFFF5722),
+      return const _RiskCfg(Color(0xFFFF5722),
           CupertinoIcons.exclamationmark_circle_fill, '⚠️ 风险较高，建议尽快就医');
     case 'medium':
-      return _RiskCfg(AppTheme.warning, CupertinoIcons.exclamationmark_circle,
-          '🔶 中等风险，建议重点观察');
+      return const _RiskCfg(AppTheme.warning,
+          CupertinoIcons.exclamationmark_circle, '🔶 中等风险，建议重点观察');
     default:
-      return _RiskCfg(AppTheme.success, CupertinoIcons.checkmark_circle_fill,
-          '✅ 当前偏轻，可先居家观察');
+      return const _RiskCfg(AppTheme.success,
+          CupertinoIcons.checkmark_circle_fill, '✅ 当前偏轻，可先居家观察');
   }
 }
 
@@ -1131,22 +1213,53 @@ List<String> _stringList(dynamic value) {
       .toList();
 }
 
-class _ConsultStructuredCard extends StatelessWidget {
+List<String> _questionList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((item) {
+        if (item is Map) return item['text']?.toString().trim() ?? '';
+        return item?.toString().trim() ?? '';
+      })
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+List<String> _nextActionList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((item) {
+        if (item is Map) return item['text']?.toString().trim() ?? '';
+        return item?.toString().trim() ?? '';
+      })
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+class ConsultStructuredCard extends StatelessWidget {
   final Map<String, dynamic> response;
   final bool showDisclaimer;
   final bool emphasizeRisk;
+  final ValueChanged<String>? onPromptSelected;
 
-  const _ConsultStructuredCard({
+  const ConsultStructuredCard({
+    super.key,
     required this.response,
     this.showDisclaimer = false,
     this.emphasizeRisk = false,
+    this.onPromptSelected,
   });
 
   @override
   Widget build(BuildContext context) {
+    final responseType =
+        response['response_type'] as String? ?? 'triage_report';
     final risk = response['risk_level'] as String? ?? 'low';
     final cfg = _riskCfg(risk);
+    final title = (response['title'] as String? ?? '').trim();
+    final shortAnswer = (response['short_answer'] as String? ?? '').trim();
     final summary = (response['summary'] as String? ?? '').trim();
+    final missingInfo = _stringList(response['missing_info']);
+    final followUpQuestionsRaw = response['follow_up_questions'];
     final possibleCauses = _stringList(response['possible_causes']);
     final homeCare = _stringList(response['home_care']);
     final watchPoints = _stringList(response['watch_points']);
@@ -1157,6 +1270,38 @@ class _ConsultStructuredCard extends StatelessWidget {
 
     final careItems = homeCare.isNotEmpty ? homeCare : legacyAdvice;
 
+    if (responseType == 'guide' ||
+        responseType == 'follow_up' ||
+        responseType == 'unsupported' ||
+        responseType == 'nutrition_advice') {
+      final questions = _questionList(followUpQuestionsRaw);
+      return _buildGuidanceCard(
+        context,
+        icon: responseType == 'unsupported'
+            ? CupertinoIcons.info_circle_fill
+            : CupertinoIcons.question_circle_fill,
+        title: title.isNotEmpty ? title : '还需要更多信息',
+        body: shortAnswer.isNotEmpty ? shortAnswer : summary,
+        missingInfo: missingInfo,
+        questions: questions,
+        nextActions: _nextActionList(response['next_actions']),
+        onQuestionTap: onPromptSelected,
+      );
+    }
+
+    if (responseType == 'emergency_alert') {
+      final emergency = response['emergency'] as Map<String, dynamic>?;
+      return _buildEmergencyCard(
+        title: title.isNotEmpty ? title : '建议立即就医',
+        body: shortAnswer.isNotEmpty ? shortAnswer : summary,
+        actions: [
+          ..._stringList(emergency?['immediate_actions']),
+          ..._nextActionList(response['next_actions']),
+        ],
+        avoid: _stringList(emergency?['avoid']),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1166,7 +1311,7 @@ class _ConsultStructuredCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: emphasizeRisk
-                  ? [cfg.color.withOpacity(0.88), cfg.color]
+                  ? [cfg.color.withValues(alpha: 0.88), cfg.color]
                   : [Colors.white, Colors.white],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1175,7 +1320,7 @@ class _ConsultStructuredCard extends StatelessWidget {
             boxShadow: AppTheme.cardShadow,
             border: emphasizeRisk
                 ? null
-                : Border.all(color: cfg.color.withOpacity(0.16)),
+                : Border.all(color: cfg.color.withValues(alpha: 0.16)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1187,8 +1332,8 @@ class _ConsultStructuredCard extends StatelessWidget {
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
                       color: emphasizeRisk
-                          ? Colors.white.withOpacity(0.22)
-                          : cfg.color.withOpacity(0.12),
+                          ? Colors.white.withValues(alpha: 0.22)
+                          : cfg.color.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -1233,7 +1378,7 @@ class _ConsultStructuredCard extends StatelessWidget {
         ),
         if (possibleCauses.isNotEmpty) ...[
           const SizedBox(height: 10),
-          _ConsultSectionCard(
+          ConsultSectionCard(
             icon: CupertinoIcons.search,
             title: '可能原因',
             items: possibleCauses,
@@ -1241,7 +1386,7 @@ class _ConsultStructuredCard extends StatelessWidget {
         ],
         if (careItems.isNotEmpty) ...[
           const SizedBox(height: 10),
-          _ConsultSectionCard(
+          ConsultSectionCard(
             icon: CupertinoIcons.heart,
             title: '居家护理',
             items: careItems,
@@ -1249,7 +1394,7 @@ class _ConsultStructuredCard extends StatelessWidget {
         ],
         if (watchPoints.isNotEmpty) ...[
           const SizedBox(height: 10),
-          _ConsultSectionCard(
+          ConsultSectionCard(
             icon: CupertinoIcons.eye,
             title: '接下来观察什么',
             items: watchPoints,
@@ -1257,7 +1402,7 @@ class _ConsultStructuredCard extends StatelessWidget {
         ],
         if (whenToSeekVet.isNotEmpty) ...[
           const SizedBox(height: 10),
-          _ConsultSectionCard(
+          ConsultSectionCard(
             icon: CupertinoIcons.exclamationmark_shield_fill,
             title: '这些情况建议就医',
             items: whenToSeekVet,
@@ -1305,12 +1450,22 @@ class _ConsultStructuredCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        followUpQuestion,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textPrimary,
-                          height: 1.6,
+                      GestureDetector(
+                        onTap: onPromptSelected == null
+                            ? null
+                            : () => onPromptSelected!(followUpQuestion),
+                        child: Text(
+                          followUpQuestion,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: onPromptSelected == null
+                                ? AppTheme.textPrimary
+                                : AppTheme.primary,
+                            height: 1.6,
+                            fontWeight: onPromptSelected == null
+                                ? FontWeight.w400
+                                : FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -1342,21 +1497,206 @@ class _ConsultStructuredCard extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildGuidanceCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String body,
+    required List<String> missingInfo,
+    required List<String> questions,
+    required List<String> nextActions,
+    ValueChanged<String>? onQuestionTap,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.14)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 16, color: AppTheme.primary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.deepBlue,
+                ),
+              ),
+              if (body.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textPrimary,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ]),
+          ),
+        ]),
+        if (missingInfo.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: missingInfo
+                .map((item) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F7FC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE4DDF4)),
+                      ),
+                      child: Text(
+                        item,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.deepBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+        if (questions.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          ConsultSectionCard(
+            icon: CupertinoIcons.question_circle,
+            title: '请先补充',
+            items: questions,
+            onItemTap: onQuestionTap,
+          ),
+        ],
+        if (nextActions.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          ConsultSectionCard(
+            icon: CupertinoIcons.checkmark_circle,
+            title: '现在可以做',
+            items: nextActions,
+          ),
+        ],
+      ]),
+    );
+  }
+
+  Widget _buildEmergencyCard({
+    required String title,
+    required String body,
+    required List<String> actions,
+    required List<String> avoid,
+  }) {
+    final uniqueActions = actions.toSet().toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.danger,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.22),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              CupertinoIcons.exclamationmark_triangle_fill,
+              color: Colors.white,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              if (body.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ]),
+          ),
+        ]),
+      ),
+      if (uniqueActions.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        ConsultSectionCard(
+          icon: CupertinoIcons.bolt_fill,
+          title: '立刻处理',
+          items: uniqueActions,
+          accent: const Color(0xFFFFEDEA),
+          iconColor: AppTheme.danger,
+        ),
+      ],
+      if (avoid.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        ConsultSectionCard(
+          icon: CupertinoIcons.xmark_octagon_fill,
+          title: '不要这样做',
+          items: avoid,
+          accent: const Color(0xFFFFF4E5),
+          iconColor: AppTheme.warning,
+        ),
+      ],
+    ]);
+  }
 }
 
-class _ConsultSectionCard extends StatelessWidget {
+class ConsultSectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<String> items;
   final Color accent;
   final Color iconColor;
+  final ValueChanged<String>? onItemTap;
 
-  const _ConsultSectionCard({
+  const ConsultSectionCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.items,
     this.accent = const Color(0xFFF8F7FC),
     this.iconColor = AppTheme.primary,
+    this.onItemTap,
   });
 
   @override
@@ -1397,42 +1737,50 @@ class _ConsultSectionCard extends StatelessWidget {
           const SizedBox(height: 12),
           ...List.generate(
             items.length,
-            (index) => Padding(
-              padding:
-                  EdgeInsets.only(bottom: index == items.length - 1 ? 0 : 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: accent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: iconColor,
+            (index) => GestureDetector(
+              onTap: onItemTap == null ? null : () => onItemTap!(items[index]),
+              child: Padding(
+                padding:
+                    EdgeInsets.only(bottom: index == items.length - 1 ? 0 : 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: iconColor,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      items[index],
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textPrimary,
-                        height: 1.6,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        items[index],
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: onItemTap == null
+                              ? AppTheme.textPrimary
+                              : AppTheme.primary,
+                          height: 1.6,
+                          fontWeight: onItemTap == null
+                              ? FontWeight.w400
+                              : FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1637,7 +1985,7 @@ class _ConsultHistoryDetailSheet extends StatelessWidget {
             _historyBlock('主人提问', symptoms),
             if (ai != null) ...[
               const SizedBox(height: 12),
-              _ConsultStructuredCard(
+              ConsultStructuredCard(
                 response: ai!,
                 showDisclaimer: true,
                 emphasizeRisk: true,
@@ -1683,7 +2031,8 @@ class _ConsultHistoryDetailSheet extends StatelessWidget {
 
 // ── Animated thinking indicator ───────────────────────────
 class _ThinkingBubble extends StatefulWidget {
-  const _ThinkingBubble();
+  final String text;
+  const _ThinkingBubble({required this.text});
   @override
   State<_ThinkingBubble> createState() => _ThinkingBubbleState();
 }
@@ -1724,15 +2073,33 @@ class _ThinkingBubbleState extends State<_ThinkingBubble>
                   bottomRight: Radius.circular(18),
                   bottomLeft: Radius.circular(4)),
               boxShadow: AppTheme.cardShadow),
-          child: AnimatedBuilder(
-            animation: _ctrl,
-            builder: (_, __) => Row(mainAxisSize: MainAxisSize.min, children: [
-              _dot(0.0),
-              const SizedBox(width: 5),
-              _dot(0.33),
-              const SizedBox(width: 5),
-              _dot(0.66),
-            ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedBuilder(
+                animation: _ctrl,
+                builder: (_, __) =>
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                  _dot(0.0),
+                  const SizedBox(width: 5),
+                  _dot(0.33),
+                  const SizedBox(width: 5),
+                  _dot(0.66),
+                ]),
+              ),
+              const SizedBox(width: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 210),
+                child: Text(
+                  widget.text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ]),
@@ -1749,7 +2116,7 @@ class _ThinkingBubbleState extends State<_ThinkingBubble>
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(opacity),
+              color: AppTheme.primary.withValues(alpha: opacity),
               shape: BoxShape.circle)),
     );
   }

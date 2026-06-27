@@ -17,7 +17,8 @@ class HomeScreen extends StatelessWidget {
           _BottomTabBar(
             currentIndex: navigationShell.currentIndex,
             onTap: (i) => navigationShell.goBranch(
-              i, initialLocation: i == navigationShell.currentIndex,
+              i,
+              initialLocation: i == navigationShell.currentIndex,
             ),
           ),
         ],
@@ -34,7 +35,8 @@ class _BottomTabBar extends StatelessWidget {
   static const _items = [
     _TabItem(icon: CupertinoIcons.house_fill, label: '档案'),
     _TabItem(icon: CupertinoIcons.heart_fill, label: '健康'),
-    _TabItem(icon: CupertinoIcons.chat_bubble_2_fill, label: '问诊', isCenter: true),
+    _TabItem(
+        icon: CupertinoIcons.chat_bubble_2_fill, label: '问诊', isCenter: true),
     _TabItem(icon: CupertinoIcons.time, label: '时光轴'),
     _TabItem(icon: CupertinoIcons.person_fill, label: '我的'),
   ];
@@ -44,10 +46,11 @@ class _BottomTabBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.card,
-        border: Border(top: BorderSide(color: AppTheme.divider, width: 0.5)),
+        border:
+            const Border(top: BorderSide(color: AppTheme.divider, width: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withOpacity(0.08),
+            color: AppTheme.primary.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -69,18 +72,24 @@ class _BottomTabBar extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: Center(
                       child: Container(
-                        width: 52, height: 52,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: active
                                 ? [AppTheme.primary, const Color(0xFF4A90E2)]
-                                : [const Color(0xFFB0A8E8), const Color(0xFF9C8FD4)],
+                                : [
+                                    const Color(0xFFB0A8E8),
+                                    const Color(0xFF9C8FD4)
+                                  ],
                           ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primary.withOpacity(active ? 0.5 : 0.3),
-                              blurRadius: 16, offset: const Offset(0, 4)),
+                                color: AppTheme.primary
+                                    .withValues(alpha: active ? 0.5 : 0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4)),
                           ],
                         ),
                         child: Icon(item.icon, size: 24, color: Colors.white),
@@ -98,7 +107,8 @@ class _BottomTabBar extends StatelessWidget {
                     children: [
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 5),
                         decoration: active
                             ? BoxDecoration(
                                 color: AppTheme.primarySoft,
@@ -116,7 +126,8 @@ class _BottomTabBar extends StatelessWidget {
                         item.label,
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                          fontWeight:
+                              active ? FontWeight.w700 : FontWeight.w400,
                           color: active ? AppTheme.primary : AppTheme.textHint,
                         ),
                       ),
@@ -136,5 +147,6 @@ class _TabItem {
   final IconData icon;
   final String label;
   final bool isCenter;
-  const _TabItem({required this.icon, required this.label, this.isCenter = false});
+  const _TabItem(
+      {required this.icon, required this.label, this.isCenter = false});
 }

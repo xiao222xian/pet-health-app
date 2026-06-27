@@ -285,14 +285,14 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [statusColor.withOpacity(0.85), statusColor],
+            colors: [statusColor.withValues(alpha: 0.85), statusColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: statusColor.withOpacity(0.35),
+                color: statusColor.withValues(alpha: 0.35),
                 blurRadius: 24,
                 offset: const Offset(0, 8))
           ],
@@ -307,7 +307,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.22),
+                  color: Colors.white.withValues(alpha: 0.22),
                   borderRadius: BorderRadius.circular(10)),
               child: Text(log == null ? '去记录 ›' : '点击编辑 ›',
                   style: const TextStyle(
@@ -361,7 +361,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
         height: 50,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.22),
+          color: Colors.white.withValues(alpha: 0.22),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -405,18 +405,19 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
                     d.month == today.month &&
                     d.year == today.year;
                 Color dotColor;
-                if (log == null)
-                  dotColor = AppTheme.textHint.withOpacity(0.25);
-                else {
+                if (log == null) {
+                  dotColor = AppTheme.textHint.withValues(alpha: 0.25);
+                } else {
                   final level = log.appetiteLevel ?? 3;
-                  if (level >= 4)
+                  if (level >= 4) {
                     dotColor = AppTheme.success;
-                  else if (level == 3)
+                  } else if (level == 3) {
                     dotColor = const Color(0xFF26A69A);
-                  else if (level == 2)
+                  } else if (level == 2) {
                     dotColor = AppTheme.warning;
-                  else
+                  } else {
                     dotColor = AppTheme.danger;
+                  }
                 }
                 const wds = ['一', '二', '三', '四', '五', '六', '日'];
                 return Column(children: [
@@ -462,7 +463,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
               const SizedBox(width: 10),
               _legendDot(AppTheme.success, '很棒'),
               const SizedBox(width: 10),
-              _legendDot(AppTheme.textHint.withOpacity(0.25), '未记'),
+              _legendDot(AppTheme.textHint.withValues(alpha: 0.25), '未记'),
             ]),
             const SizedBox(height: 10),
             const Text('点击查看日历历史',
@@ -516,7 +517,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(13)),
               child: Center(
                   child: Text(emoji, style: const TextStyle(fontSize: 22)))),
@@ -570,7 +571,7 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
   Widget _miniChip(String text, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
         decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6)),
         child: Text(text,
             style: TextStyle(
@@ -659,8 +660,9 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
                       (spots.length - 1).toDouble().clamp(1, double.infinity),
                   getTitlesWidget: (v, meta) {
                     final idx = v.toInt();
-                    if (idx < 0 || idx >= points.length)
+                    if (idx < 0 || idx >= points.length) {
                       return const SizedBox.shrink();
+                    }
                     final d = points[idx].logDate;
                     return Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -707,8 +709,8 @@ class _HealthLogScreenState extends State<HealthLogScreen> {
                       show: true,
                       gradient: LinearGradient(
                           colors: [
-                            AppTheme.primary.withOpacity(0.18),
-                            AppTheme.primary.withOpacity(0.0)
+                            AppTheme.primary.withValues(alpha: 0.18),
+                            AppTheme.primary.withValues(alpha: 0.0)
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter)),
@@ -915,7 +917,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                         color: AppTheme.primarySoft,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: AppTheme.primary.withOpacity(0.3)),
+                            color: AppTheme.primary.withValues(alpha: 0.3)),
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         const Icon(CupertinoIcons.calendar,
@@ -1303,7 +1305,7 @@ class _HealthLogDetailSheet extends StatelessWidget {
   Widget _detailChip(String text, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
@@ -1341,59 +1343,59 @@ class _HealthCalendarSheetState extends State<_HealthCalendarSheet> {
   Widget build(BuildContext context) {
     final firstWeekday = DateTime(_month.year, _month.month, 1).weekday;
     final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
-    final cells =
-        List<Widget>.generate(firstWeekday - 1, (_) => const SizedBox.shrink())
-          ..addAll(List.generate(daysInMonth, (i) {
-            final date = DateTime(_month.year, _month.month, i + 1);
-            final key = _HealthLogScreenState._dateKey(date);
-            final log = widget.logsByDate[key];
-            final isToday = _HealthLogScreenState._dateKey(date) ==
-                _HealthLogScreenState._dateKey(DateTime.now());
-            final color = log == null
-                ? Colors.transparent
-                : (log.appetiteLevel ?? 3) >= 4
-                    ? AppTheme.success
-                    : (log.appetiteLevel ?? 3) == 3
-                        ? const Color(0xFF26A69A)
-                        : (log.appetiteLevel ?? 3) == 2
-                            ? AppTheme.warning
-                            : AppTheme.danger;
-            return GestureDetector(
-              onTap: log == null ? null : () => widget.onSelectLog(log),
-              child: Container(
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: log == null ? Colors.white : color.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isToday ? AppTheme.primary : AppTheme.divider,
-                    width: isToday ? 1.5 : 1,
+    final cells = List<Widget>.generate(
+        firstWeekday - 1, (_) => const SizedBox.shrink())
+      ..addAll(List.generate(daysInMonth, (i) {
+        final date = DateTime(_month.year, _month.month, i + 1);
+        final key = _HealthLogScreenState._dateKey(date);
+        final log = widget.logsByDate[key];
+        final isToday = _HealthLogScreenState._dateKey(date) ==
+            _HealthLogScreenState._dateKey(DateTime.now());
+        final color = log == null
+            ? Colors.transparent
+            : (log.appetiteLevel ?? 3) >= 4
+                ? AppTheme.success
+                : (log.appetiteLevel ?? 3) == 3
+                    ? const Color(0xFF26A69A)
+                    : (log.appetiteLevel ?? 3) == 2
+                        ? AppTheme.warning
+                        : AppTheme.danger;
+        return GestureDetector(
+          onTap: log == null ? null : () => widget.onSelectLog(log),
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: log == null ? Colors.white : color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isToday ? AppTheme.primary : AppTheme.divider,
+                width: isToday ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${i + 1}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.deepBlue,
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${i + 1}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.deepBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: log == null ? Colors.transparent : color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: log == null ? Colors.transparent : color,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-            );
-          }));
+              ],
+            ),
+          ),
+        );
+      }));
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.72,

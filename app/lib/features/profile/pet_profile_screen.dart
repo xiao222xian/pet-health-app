@@ -112,10 +112,11 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading)
+    if (_loading) {
       return const CupertinoPageScaffold(
           backgroundColor: AppTheme.background,
           child: Center(child: CupertinoActivityIndicator()));
+    }
     if (_pet == null) return _buildEmpty();
     return _buildProfile(_pet!);
   }
@@ -205,7 +206,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                         children: [
                           Text('我的宠物',
                               style: TextStyle(
-                                  color: AppTheme.primary.withOpacity(0.7),
+                                  color:
+                                      AppTheme.primary.withValues(alpha: 0.7),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500)),
                         ]),
@@ -251,16 +253,16 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                             color: AppTheme.primary
-                                                .withOpacity(0.2)),
+                                                .withValues(alpha: 0.2)),
                                       ),
-                                      child: Row(
+                                      child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(CupertinoIcons.pencil,
+                                            Icon(CupertinoIcons.pencil,
                                                 color: AppTheme.primary,
                                                 size: 12),
-                                            const SizedBox(width: 4),
-                                            const Text('编辑',
+                                            SizedBox(width: 4),
+                                            Text('编辑',
                                                 style: TextStyle(
                                                     color: AppTheme.primary,
                                                     fontSize: 12,
@@ -445,8 +447,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                           child: const Icon(CupertinoIcons.add,
                               color: Colors.white, size: 20)),
                       const SizedBox(height: 5),
-                      Text('添加',
-                          style: const TextStyle(
+                      const Text('添加',
+                          style: TextStyle(
                               fontSize: 10,
                               color: AppTheme.primary,
                               fontWeight: FontWeight.w600)),
@@ -631,7 +633,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       decoration: BoxDecoration(
           color: AppTheme.primarySoft,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.primary.withOpacity(0.2))),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2))),
       child: Text(text,
           style: const TextStyle(
               color: AppTheme.primary,
@@ -651,13 +653,13 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       decoration: BoxDecoration(
           color: AppTheme.warningSoft,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.warning.withOpacity(0.2))),
+          border: Border.all(color: AppTheme.warning.withValues(alpha: 0.2))),
       child: Row(children: [
         Container(
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-                color: AppTheme.warning.withOpacity(0.15),
+                color: AppTheme.warning.withValues(alpha: 0.15),
                 shape: BoxShape.circle),
             child: const Icon(CupertinoIcons.bell_fill,
                 color: AppTheme.warning, size: 18)),
@@ -677,7 +679,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
         Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-                color: AppTheme.warning.withOpacity(0.15),
+                color: AppTheme.warning.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10)),
             child: const Text('即将到期',
                 style: TextStyle(
@@ -705,7 +707,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(icon, color: color, size: 22)),
                 const SizedBox(width: 14),
@@ -762,8 +764,6 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   String? _displayWeight(Pet pet) {
     final latestWeight = (_stats?['weight'] as num?)?.toDouble();
     final weight = latestWeight ?? pet.weightKg;
-    return weight == null
-        ? null
-        : weight.toStringAsFixed(weight.truncateToDouble() == weight ? 0 : 1);
+    return weight?.toStringAsFixed(weight.truncateToDouble() == weight ? 0 : 1);
   }
 }

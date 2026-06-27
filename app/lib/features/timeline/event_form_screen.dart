@@ -189,7 +189,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         onTap: () => context.pop(),
                         child: Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppTheme.primarySoft,
                             shape: BoxShape.circle,
                           ),
@@ -355,7 +355,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   decoration: BoxDecoration(
-                    color: sel ? color.withOpacity(0.1) : Colors.white,
+                    color: sel ? color.withValues(alpha: 0.1) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: sel ? color : AppTheme.divider,
@@ -364,7 +364,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                     boxShadow: sel
                         ? [
                             BoxShadow(
-                              color: color.withOpacity(0.22),
+                              color: color.withValues(alpha: 0.22),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -388,8 +388,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         t.$4,
                         style: TextStyle(
                           fontSize: 9,
-                          color:
-                              sel ? color.withOpacity(0.7) : AppTheme.textHint,
+                          color: sel
+                              ? color.withValues(alpha: 0.7)
+                              : AppTheme.textHint,
                         ),
                       ),
                     ],
@@ -710,7 +711,7 @@ class _TimelinePhotoViewerState extends State<_TimelinePhotoViewer> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: Colors.black.withOpacity(0.92),
+      backgroundColor: Colors.black.withValues(alpha: 0.92),
       child: Stack(
         children: [
           PageView.builder(
@@ -751,7 +752,7 @@ class _TimelinePhotoViewerState extends State<_TimelinePhotoViewer> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.14),
+                        color: Colors.white.withValues(alpha: 0.14),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

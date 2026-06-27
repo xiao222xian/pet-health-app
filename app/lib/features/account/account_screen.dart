@@ -194,7 +194,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     'display_name': nextName,
                     'avatar_url': _avatarUrl,
                   });
-                  if (!mounted) return;
+                  if (!mounted || !sheetContext.mounted) return;
                   setState(() => _displayName = nextName);
                   Navigator.pop(sheetContext);
                   SupabaseService.notifyProfileChanged();
@@ -532,7 +532,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -681,7 +681,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppTheme.danger.withOpacity(0.08),
+                  color: AppTheme.danger.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
