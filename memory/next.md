@@ -1,10 +1,12 @@
 # Next
 
-Last updated: 2026-06-27 10:10 CST
+Last updated: 2026-07-07 15:25 CST
 
 ## Exact Next Step
 
-Push the freshly organized commits when ready, then run one manual simulator pass of the rebuilt AI consult UX:
+Provide or restore a valid Supabase project before App Store submission. Current configured project `https://aktmdyxeqcmaldbylzfi.supabase.co` returns DNS NXDOMAIN, so the backend is reachable but auth/register/login cannot complete.
+
+After Supabase is fixed, run one manual simulator pass of the rebuilt AI consult UX:
 
 - `hi` should render a guide/follow-up card, not a medical diagnosis card.
 - A vague symptom such as `狗狗吐了` should ask for missing information.
@@ -14,13 +16,13 @@ Push the freshly organized commits when ready, then run one manual simulator pas
 - Test a new account with no pet profile; the consult input should clearly say to add/select a pet first.
 - Create a new pet through the app and confirm it goes through `POST /api/v1/pets`.
 
-The backend has already been deployed and verified online. AI uses FLU first (`https://new.fluapi.com/v1`, `gpt-5.5`) with existing fallback providers and a conservative rules fallback if all model providers fail. Latest live regression confirms guide, follow-up, emergency, triage, and valid SSE behavior.
+The backend has been rebuilt and verified online after the 2026-07-07 VPS wipe: `/opt/pet-backend`, systemd `pet-backend`, nginx HTTPS, certbot, local `.env` restoration, and FLU config are back. AI uses FLU first (`https://new.fluapi.com/v1`, `gpt-5.5`) with existing fallback providers and a conservative rules fallback if all model providers fail. Full authenticated live regression is currently blocked by the Supabase NXDOMAIN issue.
 
 Project health is now clean for the checked surfaces: Flutter `analyze` has no issues, Flutter tests pass, iOS simulator debug build passes, backend build/tests pass, and backend npm audit reports zero vulnerabilities.
 
 The next production tasks from the previous handoff are complete:
 
-- Production Redis is installed/enabled on the VPS and `REDIS_URL=redis://127.0.0.1:6379` is set in `/opt/pet-backend/.env`.
+- Production Redis still needs reinstalling/enabling after the 2026-07-07 VPS rebuild once the server's unattended apt upgrade lock clears. `REDIS_URL=redis://127.0.0.1:6379` is set and the backend has an in-memory fallback meanwhile.
 - `POST /api/v1/pets` exists and live testing confirmed it creates pets for the authenticated user even if a client sends a different `user_id`.
 - Consult card widget tests now cover guide/follow-up click, emergency card, and triage sections.
 
@@ -38,6 +40,9 @@ open ios/Runner.xcworkspace
 
 # Server-side service / logs if needed
 ssh root@103.189.141.67 'systemctl status pet-backend; journalctl -u pet-backend -n 50'
+
+# Once apt unattended-upgrade exits, restore Redis
+ssh root@103.189.141.67 'apt-get install -y redis-server && systemctl enable --now redis-server && redis-cli ping && systemctl restart pet-backend'
 ```
 
 ## Files To Inspect First
@@ -58,6 +63,8 @@ ssh root@103.189.141.67 'systemctl status pet-backend; journalctl -u pet-backend
 - Add a root route (`GET /`) or lightweight landing/diagnostic page if browser visitors should not see Express 404 at `https://pet.superstar.tots.asia/`.
 - Migrate `petsoul_h5/petsoul-bff/` (Python/FastAPI, needs MS_TOKEN, was on ModelScope Studio) onto the same VPS too?
 - Server hardening: switch to SSH keys, disable root password login, reset the shared root password that was passed in chat.
+- Fix Supabase production config: current `aktmdyxeqcmaldbylzfi.supabase.co` and old `srljyvqojhhwbgtdojkh.supabase.co` both return NXDOMAIN.
+- Pull the server-regenerated `/opt/pet-backend/package-lock.json` back to local when SSH stabilizes, because the server used `npm install` to regenerate a lockfile compatible with the `esbuild` override after `npm ci` rejected the current local lock.
 - Classify remaining unstaged local-only files after commit cleanup (`.claude/settings.local.json`, IDE files, generated caches, nested repo internals, and large materials).
 
 ## Completed Plan For This Session

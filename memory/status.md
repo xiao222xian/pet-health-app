@@ -1,7 +1,7 @@
 # Status
 
 Status: active
-Last reviewed: 2026-06-27
+Last reviewed: 2026-07-07
 Main AI: mixed
 Current goal: maintain the pet health app while organizing the broader pet ecosystem into app, backend, commerce, hardware, and H5 tracks.
 
@@ -17,14 +17,15 @@ Pet app and broader pet business workspace with Flutter app, backend, Supabase c
 - `commerce/storefront/` now contains the overseas pet supplement static storefront prototype.
 - `PROJECT_STRUCTURE.md` documents current module boundaries.
 - Node `backend/` is self-hosted on VPS `103.189.141.67` (Ubuntu 22.04, Node 20): systemd `pet-backend` + nginx HTTPS proxy for `https://pet.superstar.tots.asia`, auto-restart + boot-start. Replaces Render free tier.
-- Production health: `https://pet.superstar.tots.asia/health` returns ok. HTTP for `pet.superstar.tots.asia` redirects to HTTPS.
+- Production health: `https://pet.superstar.tots.asia/health` returns ok after the 2026-07-07 VPS rebuild. HTTP for `pet.superstar.tots.asia` redirects to HTTPS.
 - AI consult is rebuilt as a production-style triage agent with explicit response contract, streaming SSE, rule-based emergency gating, FLU/OpenAI-compatible primary model (`gpt-5.5`), provider fallbacks, and conservative rules fallback.
-- Redis is installed/enabled on the VPS and used for consult state when `REDIS_URL=redis://127.0.0.1:6379` is set.
+- `REDIS_URL=redis://127.0.0.1:6379` is set, but Redis still needs reinstalling after the 2026-07-07 VPS rebuild once the server's unattended apt upgrade lock clears. The backend can run with its in-memory consult-state fallback until Redis is restored.
 - Backend now provides `POST /api/v1/auth/register` and `POST /api/v1/pets` to avoid client-side Supabase signup/rate-limit/RLS failure paths.
 - Local checks are clean: Flutter `analyze`, Flutter tests, iOS simulator debug build, backend build/tests, and backend audit.
 
 ## What Is Broken Or Unknown
 
+- Supabase project `aktmdyxeqcmaldbylzfi.supabase.co` currently resolves as NXDOMAIN, so auth/register/login, pet creation, and authenticated consult flows are blocked until a valid Supabase project URL and anon/service role keys are supplied or the project is restored.
 - Some untracked H5/studio and hardware/material folders need classification before commit.
 - Root README still mainly describes the original pet health app and does not fully reflect the broader pet commerce/hardware workspace.
 
